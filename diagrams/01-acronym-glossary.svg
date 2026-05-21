@@ -1,0 +1,234 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 38px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-size: 18px; fill: #475569; }
+      .sec { font-size: 22px; font-weight: 700; fill: #0f172a; letter-spacing: 0.02em; text-transform: uppercase; }
+      .sec-rule { stroke: #cbd5e1; stroke-width: 1.5; }
+      .acronym { font-size: 34px; font-weight: 800; fill: #ffffff; letter-spacing: 0.01em; }
+      .expansion { font-size: 16px; font-weight: 600; fill: #1e293b; }
+      .meaning { font-size: 15px; fill: #334155; }
+      .card-bg { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }
+      .bar-std { fill: #1e3a8a; }
+      .bar-v2 { fill: #c2410c; }
+      .bar-fhir { fill: #047857; }
+      .bar-tool { fill: #6d28d9; }
+    </style>
+  </defs>
+
+  <!-- Page background -->
+  <rect width="1600" height="1280" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="60" y="68" class="title">A field guide to the acronyms</text>
+  <text x="60" y="98" class="subtitle">Every term you'll see in SETUP.md, decoded — what it is and why it shows up.</text>
+
+  <!-- ─── Section 1: The Standards ─── -->
+  <text x="60" y="158" class="sec">The Standards</text>
+  <line x1="280" y1="151" x2="1540" y2="151" class="sec-rule"/>
+
+  <!-- HL7 -->
+  <g transform="translate(60,180)">
+    <rect width="357" height="200" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L347,0 A10,10 0 0 1 357,10 L357,56 L0,56 Z" class="bar-std"/>
+    <text x="20" y="42" class="acronym">HL7</text>
+    <text x="20" y="86" class="expansion">Health Level Seven International</text>
+    <text x="20" y="115" class="meaning">The standards body that publishes</text>
+    <text x="20" y="135" class="meaning">both HL7 v2 and FHIR. "Level 7"</text>
+    <text x="20" y="155" class="meaning">refers to the OSI application</text>
+    <text x="20" y="175" class="meaning">layer — i.e., end-user data.</text>
+  </g>
+
+  <!-- HL7 v2 -->
+  <g transform="translate(447,180)">
+    <rect width="357" height="200" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L347,0 A10,10 0 0 1 357,10 L357,56 L0,56 Z" class="bar-std"/>
+    <text x="20" y="42" class="acronym">HL7 v2</text>
+    <text x="20" y="86" class="expansion">HL7 messaging standard, v2.x (1989+)</text>
+    <text x="20" y="115" class="meaning">Pipe-delimited messages flowing</text>
+    <text x="20" y="135" class="meaning">over TCP sockets. Still runs the</text>
+    <text x="20" y="155" class="meaning">majority of hospital interfaces</text>
+    <text x="20" y="175" class="meaning">in the world today.</text>
+  </g>
+
+  <!-- FHIR -->
+  <g transform="translate(834,180)">
+    <rect width="357" height="200" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L347,0 A10,10 0 0 1 357,10 L357,56 L0,56 Z" class="bar-std"/>
+    <text x="20" y="42" class="acronym">FHIR</text>
+    <text x="20" y="86" class="expansion">Fast Healthcare Interoperability Resources</text>
+    <text x="20" y="115" class="meaning">Pronounced "fire". A modern</text>
+    <text x="20" y="135" class="meaning">REST + JSON standard (2014+)</text>
+    <text x="20" y="155" class="meaning">that replaces v2's wire format</text>
+    <text x="20" y="175" class="meaning">with web-native idioms.</text>
+  </g>
+
+  <!-- R4 -->
+  <g transform="translate(1221,180)">
+    <rect width="357" height="200" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L347,0 A10,10 0 0 1 357,10 L357,56 L0,56 Z" class="bar-std"/>
+    <text x="20" y="42" class="acronym">R4</text>
+    <text x="20" y="86" class="expansion">FHIR Release 4 (2019)</text>
+    <text x="20" y="115" class="meaning">The first "normative" FHIR</text>
+    <text x="20" y="135" class="meaning">release and the most widely</text>
+    <text x="20" y="155" class="meaning">deployed version. The HAPI</text>
+    <text x="20" y="175" class="meaning">server in this lab speaks R4.</text>
+  </g>
+
+  <!-- ─── Section 2: HL7 v2 vocabulary ─── -->
+  <text x="60" y="430" class="sec">HL7 v2 — vocabulary you'll see on the wire</text>
+  <line x1="700" y1="423" x2="1540" y2="423" class="sec-rule"/>
+
+  <!-- MLLP -->
+  <g transform="translate(60,452)">
+    <rect width="480" height="210" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L470,0 A10,10 0 0 1 480,10 L480,56 L0,56 Z" class="bar-v2"/>
+    <text x="20" y="42" class="acronym">MLLP</text>
+    <text x="20" y="86" class="expansion">Minimum Lower Layer Protocol</text>
+    <text x="20" y="115" class="meaning">The byte framing that wraps each v2</text>
+    <text x="20" y="135" class="meaning">message on a TCP socket so the receiver</text>
+    <text x="20" y="155" class="meaning">knows where one message ends and the</text>
+    <text x="20" y="175" class="meaning">next begins:</text>
+    <text x="20" y="198" font-family="ui-monospace, SF Mono, Menlo, monospace" font-size="14" fill="#0f172a">  &lt;VT\x0b&gt;  …message…  &lt;FS\x1c&gt;&lt;CR\x0d&gt;</text>
+  </g>
+
+  <!-- ADT^A01 -->
+  <g transform="translate(570,452)">
+    <rect width="480" height="210" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L470,0 A10,10 0 0 1 480,10 L480,56 L0,56 Z" class="bar-v2"/>
+    <text x="20" y="42" class="acronym">ADT^A01</text>
+    <text x="20" y="86" class="expansion">Admit / Discharge / Transfer — event A01</text>
+    <text x="20" y="115" class="meaning">ADT is the message family covering all</text>
+    <text x="20" y="135" class="meaning">patient movement events. "A01" = patient</text>
+    <text x="20" y="155" class="meaning">admission. Other common events: A03</text>
+    <text x="20" y="175" class="meaning">(discharge), A08 (update), A11 (cancel</text>
+    <text x="20" y="195" class="meaning">admit). This lab sends A01 only.</text>
+  </g>
+
+  <!-- MSH -->
+  <g transform="translate(1080,452)">
+    <rect width="480" height="210" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L470,0 A10,10 0 0 1 480,10 L480,56 L0,56 Z" class="bar-v2"/>
+    <text x="20" y="42" class="acronym">MSH</text>
+    <text x="20" y="86" class="expansion">Message Header (segment)</text>
+    <text x="20" y="115" class="meaning">The first segment of every v2 message.</text>
+    <text x="20" y="135" class="meaning">Declares sending app/facility, receiving</text>
+    <text x="20" y="155" class="meaning">app/facility, timestamp, message type</text>
+    <text x="20" y="175" class="meaning">(ADT^A01), control ID, and the field-</text>
+    <text x="20" y="195" class="meaning">separator/encoding characters.</text>
+  </g>
+
+  <!-- PID -->
+  <g transform="translate(60,692)">
+    <rect width="480" height="210" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L470,0 A10,10 0 0 1 480,10 L480,56 L0,56 Z" class="bar-v2"/>
+    <text x="20" y="42" class="acronym">PID</text>
+    <text x="20" y="86" class="expansion">Patient Identification (segment)</text>
+    <text x="20" y="115" class="meaning">The segment carrying patient demographics:</text>
+    <text x="20" y="135" class="meaning">MRN (PID-3), name (PID-5), DOB (PID-7),</text>
+    <text x="20" y="155" class="meaning">gender (PID-8), address (PID-11). The</text>
+    <text x="20" y="175" class="meaning">JavaScript transformer in this lab extracts</text>
+    <text x="20" y="195" class="meaning">from PID and feeds the FHIR Patient.</text>
+  </g>
+
+  <!-- MRN -->
+  <g transform="translate(570,692)">
+    <rect width="480" height="210" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L470,0 A10,10 0 0 1 480,10 L480,56 L0,56 Z" class="bar-v2"/>
+    <text x="20" y="42" class="acronym">MRN</text>
+    <text x="20" y="86" class="expansion">Medical Record Number</text>
+    <text x="20" y="115" class="meaning">The patient's unique ID within a single</text>
+    <text x="20" y="135" class="meaning">facility. In FHIR it becomes a Patient</text>
+    <text x="20" y="155" class="meaning">identifier with a namespace ("system")</text>
+    <text x="20" y="175" class="meaning">that says which facility issued it —</text>
+    <text x="20" y="195" class="meaning">because MRN-1001 isn't globally unique.</text>
+  </g>
+
+  <!-- ACK -->
+  <g transform="translate(1080,692)">
+    <rect width="480" height="210" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L470,0 A10,10 0 0 1 480,10 L480,56 L0,56 Z" class="bar-v2"/>
+    <text x="20" y="42" class="acronym">ACK</text>
+    <text x="20" y="86" class="expansion">Acknowledgment — the receiver's reply</text>
+    <text x="20" y="115" class="meaning">Three result codes inside the MSA segment:</text>
+    <text x="20" y="135" class="meaning">  AA = Application Accept (success)</text>
+    <text x="20" y="155" class="meaning">  AE = Application Error (rejected — fix it)</text>
+    <text x="20" y="175" class="meaning">  AR = Application Reject (refused entirely)</text>
+    <text x="20" y="195" class="meaning">Mirth auto-ACKs unless told otherwise.</text>
+  </g>
+
+  <!-- ─── Section 3: FHIR vocab and tools ─── -->
+  <text x="60" y="952" class="sec">FHIR vocabulary &amp; the two tools in this lab</text>
+  <line x1="700" y1="945" x2="1540" y2="945" class="sec-rule"/>
+
+  <!-- REST -->
+  <g transform="translate(60,974)">
+    <rect width="357" height="240" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L347,0 A10,10 0 0 1 357,10 L357,56 L0,56 Z" class="bar-fhir"/>
+    <text x="20" y="42" class="acronym">REST</text>
+    <text x="20" y="86" class="expansion">Representational State Transfer</text>
+    <text x="20" y="115" class="meaning">The HTTP verb pattern FHIR</text>
+    <text x="20" y="135" class="meaning">servers expose. In this lab:</text>
+    <text x="20" y="160" font-family="ui-monospace, SF Mono, Menlo, monospace" font-size="13" fill="#0f172a">  PUT  /Patient?identifier=…</text>
+    <text x="20" y="180" font-family="ui-monospace, SF Mono, Menlo, monospace" font-size="13" fill="#0f172a">  GET  /Patient?family=Doe</text>
+    <text x="20" y="210" class="meaning">— same shape as any web API.</text>
+    <text x="20" y="230" class="meaning">Just over /fhir, returning JSON.</text>
+  </g>
+
+  <!-- Resource -->
+  <g transform="translate(447,974)">
+    <rect width="357" height="240" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L347,0 A10,10 0 0 1 357,10 L357,56 L0,56 Z" class="bar-fhir"/>
+    <text x="20" y="42" class="acronym">Resource</text>
+    <text x="20" y="86" class="expansion">One FHIR business object</text>
+    <text x="20" y="115" class="meaning">FHIR's unit of data. Each is a</text>
+    <text x="20" y="135" class="meaning">JSON document with a fixed</text>
+    <text x="20" y="155" class="meaning">"resourceType" and known fields.</text>
+    <text x="20" y="180" class="meaning">Common types: Patient, Encounter,</text>
+    <text x="20" y="200" class="meaning">Observation, Condition, Practitioner,</text>
+    <text x="20" y="220" class="meaning">Bundle (a wrapper for many).</text>
+  </g>
+
+  <!-- Mirth Connect -->
+  <g transform="translate(834,974)">
+    <rect width="357" height="240" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L347,0 A10,10 0 0 1 357,10 L357,56 L0,56 Z" class="bar-tool"/>
+    <text x="20" y="42" class="acronym">Mirth Connect</text>
+    <text x="20" y="86" class="expansion">Healthcare integration engine</text>
+    <text x="20" y="115" class="meaning">An open-source server (now</text>
+    <text x="20" y="135" class="meaning">"NextGen Connect") that listens</text>
+    <text x="20" y="155" class="meaning">on one protocol, runs JavaScript</text>
+    <text x="20" y="175" class="meaning">transformers, and sends out on</text>
+    <text x="20" y="195" class="meaning">another. Configured via a Java</text>
+    <text x="20" y="215" class="meaning">Swing GUI. The translator between</text>
+    <text x="20" y="235" class="meaning">v2 and FHIR in this lab.</text>
+  </g>
+
+  <!-- HAPI FHIR -->
+  <g transform="translate(1221,974)">
+    <rect width="357" height="240" rx="10" class="card-bg"/>
+    <path d="M0,10 A10,10 0 0 1 10,0 L347,0 A10,10 0 0 1 357,10 L357,56 L0,56 Z" class="bar-tool"/>
+    <text x="20" y="42" class="acronym">HAPI FHIR</text>
+    <text x="20" y="86" class="expansion">Reference Java FHIR server</text>
+    <text x="20" y="115" class="meaning">A complete, open-source FHIR R4</text>
+    <text x="20" y="135" class="meaning">server. Stores resources in an</text>
+    <text x="20" y="155" class="meaning">embedded H2 database and exposes</text>
+    <text x="20" y="175" class="meaning">the full REST API. The destination</text>
+    <text x="20" y="195" class="meaning">for everything Mirth transforms.</text>
+    <text x="20" y="220" class="meaning" font-style="italic" fill="#7c2d12">Not to be confused with HAPI HL7v2,</text>
+    <text x="20" y="235" class="meaning" font-style="italic" fill="#7c2d12">a separate v2-parsing Java library.</text>
+  </g>
+
+  <!-- Color-legend footer -->
+  <g transform="translate(60,1240)">
+    <text x="0" y="0" font-size="14" fill="#64748b">Colour key:</text>
+    <rect x="80" y="-12" width="14" height="14" rx="2" class="bar-std"/>
+    <text x="100" y="0" font-size="14" fill="#475569">standards</text>
+    <rect x="195" y="-12" width="14" height="14" rx="2" class="bar-v2"/>
+    <text x="215" y="0" font-size="14" fill="#475569">HL7 v2</text>
+    <rect x="295" y="-12" width="14" height="14" rx="2" class="bar-fhir"/>
+    <text x="315" y="0" font-size="14" fill="#475569">FHIR</text>
+    <rect x="380" y="-12" width="14" height="14" rx="2" class="bar-tool"/>
+    <text x="400" y="0" font-size="14" fill="#475569">tools</text>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+{
+  "resourceType": "Patient",
+  "identifier": [
+    {
+      "system": "http://test-facility.example.org/mrn",
+      "value": "${PATIENT_MRN}"
+    }
+  ],
+  "name": [
+    {
+      "use": "official",
+      "family": "${LAST_NAME}",
+      "given": ["${FIRST_NAME}"]
+    }
+  ],
+  "gender": "${FHIR_GENDER}",
+  "birthDate": "${DOB_FHIR}",
+  "address": [
+    {
+      "line": ["${ADDR_LINE}"],
+      "city": "${ADDR_CITY}",
+      "state": "${ADDR_STATE}",
+      "postalCode": "${ADDR_ZIP}"
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1180" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 38px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-size: 18px; fill: #475569; }
+      .panel-title { font-size: 24px; font-weight: 700; fill: #ffffff; }
+      .panel-sub { font-size: 14px; fill: #ffffff; opacity: 0.9; }
+      .mono { font-family: 'SF Mono', 'Cascadia Code', Menlo, ui-monospace, monospace; font-size: 15px; fill: #0f172a; }
+      .callout { font-size: 13px; fill: #475569; }
+      .callout-bold { font-size: 13px; font-weight: 600; fill: #1e293b; }
+      .pin-v2 { fill: #c2410c; }
+      .pin-fhir { fill: #047857; }
+      .v2-tab { fill: #c2410c; }
+      .fhir-tab { fill: #047857; }
+      .panel { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }
+      .footer-card { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 1; }
+      .footer-h { font-size: 14px; font-weight: 700; fill: #1e293b; }
+      .footer-b { font-size: 13px; fill: #334155; }
+    </style>
+    <marker id="arrowV2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+    <marker id="arrowFhir" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#047857"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1180" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="60" y="64" class="title">Same patient. Two languages.</text>
+  <text x="60" y="94" class="subtitle">John Doe (MRN-1001) expressed as an HL7 v2 message and as a FHIR Patient resource. The pipeline in this lab is essentially a translator between these two shapes.</text>
+
+  <!-- ─── LEFT PANEL: HL7 v2 ─── -->
+  <g transform="translate(60,140)">
+    <!-- Panel body -->
+    <rect width="720" height="720" rx="12" class="panel"/>
+    <!-- Title bar -->
+    <path d="M0,12 A12,12 0 0 1 12,0 L708,0 A12,12 0 0 1 720,12 L720,70 L0,70 Z" class="v2-tab"/>
+    <text x="24" y="32" class="panel-title">HL7 v2  ·  ADT^A01</text>
+    <text x="24" y="56" class="panel-sub">Pipe-delimited text · sent over a raw TCP socket, wrapped in MLLP framing bytes · since 1989</text>
+
+    <!-- MLLP framing visual -->
+    <g transform="translate(24,90)">
+      <text x="0" y="0" class="callout-bold">On the wire, one MLLP frame:</text>
+      <rect x="0" y="12" width="60" height="32" rx="4" fill="#fed7aa" stroke="#c2410c"/>
+      <text x="30" y="33" text-anchor="middle" class="mono" font-size="13" fill="#7c2d12">\x0b</text>
+      <rect x="62" y="12" width="500" height="32" rx="4" fill="#fff7ed" stroke="#c2410c" stroke-dasharray="3,3"/>
+      <text x="312" y="33" text-anchor="middle" font-size="13" fill="#7c2d12" font-style="italic">…HL7 v2 message bytes (below)…</text>
+      <rect x="564" y="12" width="60" height="32" rx="4" fill="#fed7aa" stroke="#c2410c"/>
+      <text x="594" y="33" text-anchor="middle" class="mono" font-size="13" fill="#7c2d12">\x1c</text>
+      <rect x="626" y="12" width="46" height="32" rx="4" fill="#fed7aa" stroke="#c2410c"/>
+      <text x="649" y="33" text-anchor="middle" class="mono" font-size="13" fill="#7c2d12">\x0d</text>
+      <text x="30" y="62" text-anchor="middle" class="callout">start</text>
+      <text x="594" y="62" text-anchor="middle" class="callout">end</text>
+      <text x="649" y="62" text-anchor="middle" class="callout">CR</text>
+    </g>
+
+    <!-- Separator line -->
+    <line x1="24" y1="180" x2="696" y2="180" stroke="#e2e8f0" stroke-width="1"/>
+
+    <!-- The message -->
+    <g transform="translate(24,210)">
+      <text x="0" y="0" class="callout-bold">Inside the frame — segments separated by carriage returns:</text>
+    </g>
+
+    <!-- Each segment as its own line with subtle background -->
+    <g transform="translate(24,232)" class="mono">
+      <rect x="-8" y="-2" width="688" height="24" rx="3" fill="#fff7ed"/>
+      <text x="0" y="16">MSH|^~\&amp;|SENDER|TEST_FACILITY|MIRTH|TEST_FACILITY|...|ADT^A01|MSG...|P|2.5</text>
+    </g>
+    <g transform="translate(24,262)" class="mono">
+      <rect x="-8" y="-2" width="688" height="24" rx="3" fill="#fff7ed"/>
+      <text x="0" y="16">EVN|A01|20260520120000</text>
+    </g>
+    <g transform="translate(24,292)" class="mono">
+      <rect x="-8" y="-2" width="688" height="48" rx="3" fill="#fff7ed"/>
+      <text x="0" y="16">PID|1||MRN-1001^^^TEST_FACILITY^MR||Doe^John||19850412|M|||</text>
+      <text x="0" y="40">    123 Main St^^Atlanta^GA^30301</text>
+    </g>
+    <g transform="translate(24,346)" class="mono">
+      <rect x="-8" y="-2" width="688" height="24" rx="3" fill="#fff7ed"/>
+      <text x="0" y="16">PV1|1|I|WARD^101^A|||||||MED</text>
+    </g>
+
+    <!-- Annotations -->
+    <g transform="translate(24,400)">
+      <!-- Annotation 1: pipe = field sep -->
+      <circle cx="0" cy="0" r="10" class="pin-v2"/>
+      <text x="0" y="4" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">1</text>
+      <text x="20" y="4" class="callout-bold">|</text>
+      <text x="38" y="4" class="callout">separates fields. Position matters — the parser counts pipes.</text>
+
+      <circle cx="0" cy="32" r="10" class="pin-v2"/>
+      <text x="0" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">2</text>
+      <text x="20" y="36" class="callout-bold">^</text>
+      <text x="38" y="36" class="callout">separates components inside a field (e.g. Doe^John = last^first).</text>
+
+      <circle cx="0" cy="64" r="10" class="pin-v2"/>
+      <text x="0" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">3</text>
+      <text x="20" y="68" class="callout-bold">MSH</text>
+      <text x="56" y="68" class="callout">header: who sent it, to whom, when, what type, control id.</text>
+
+      <circle cx="0" cy="96" r="10" class="pin-v2"/>
+      <text x="0" y="100" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">4</text>
+      <text x="20" y="100" class="callout-bold">PID-3</text>
+      <text x="68" y="100" class="callout">MRN. PID-5 = name, PID-7 = DOB, PID-8 = gender, PID-11 = address.</text>
+
+      <circle cx="0" cy="128" r="10" class="pin-v2"/>
+      <text x="0" y="132" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">5</text>
+      <text x="20" y="132" class="callout-bold">19850412</text>
+      <text x="92" y="132" class="callout">— DOB is YYYYMMDD, no dashes. Gender is one letter.</text>
+
+      <circle cx="0" cy="160" r="10" class="pin-v2"/>
+      <text x="0" y="164" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">6</text>
+      <text x="20" y="164" class="callout-bold">No types.</text>
+      <text x="98" y="164" class="callout">Everything is a string. No schema in the message itself — you</text>
+      <text x="20" y="184" class="callout">need a separate spec (HL7 v2.5) to know what position N of PID means.</text>
+
+      <circle cx="0" cy="212" r="10" class="pin-v2"/>
+      <text x="0" y="216" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">7</text>
+      <text x="20" y="216" class="callout-bold">Reply:</text>
+      <text x="78" y="216" class="callout">receiver sends back ACK over the same socket, also MLLP-framed.</text>
+    </g>
+  </g>
+
+  <!-- ─── CENTER: translation arrow ─── -->
+  <g transform="translate(800,400)">
+    <text x="0" y="0" text-anchor="middle" font-size="16" font-weight="700" fill="#475569">Mirth</text>
+    <text x="0" y="20" text-anchor="middle" font-size="13" fill="#64748b">transformer</text>
+    <path d="M-30,60 L30,60" stroke="#475569" stroke-width="2.5" marker-end="url(#arrowFhir)"/>
+    <text x="0" y="90" text-anchor="middle" font-size="13" fill="#64748b">parse → JS</text>
+    <text x="0" y="106" text-anchor="middle" font-size="13" fill="#64748b">map → PUT</text>
+  </g>
+
+  <!-- ─── RIGHT PANEL: FHIR ─── -->
+  <g transform="translate(820,140)">
+    <!-- Panel body -->
+    <rect width="720" height="720" rx="12" class="panel"/>
+    <!-- Title bar -->
+    <path d="M0,12 A12,12 0 0 1 12,0 L708,0 A12,12 0 0 1 720,12 L720,70 L0,70 Z" class="fhir-tab"/>
+    <text x="24" y="32" class="panel-title">FHIR R4  ·  Patient resource</text>
+    <text x="24" y="56" class="panel-sub">Structured JSON · sent over HTTPS as a normal REST call · since 2014</text>
+
+    <!-- HTTP request line -->
+    <g transform="translate(24,90)">
+      <text x="0" y="0" class="callout-bold">On the wire, one HTTP request:</text>
+      <rect x="0" y="12" width="672" height="32" rx="4" fill="#d1fae5" stroke="#047857"/>
+      <text x="12" y="33" class="mono" font-size="13" fill="#064e3b">PUT  /fhir/Patient?identifier=http://…/mrn|MRN-1001  HTTP/1.1</text>
+      <rect x="0" y="50" width="672" height="26" rx="4" fill="#ecfdf5" stroke="#047857" stroke-dasharray="3,3"/>
+      <text x="12" y="69" class="mono" font-size="13" fill="#064e3b">Content-Type: application/fhir+json</text>
+    </g>
+
+    <line x1="24" y1="200" x2="696" y2="200" stroke="#e2e8f0" stroke-width="1"/>
+
+    <!-- The JSON body -->
+    <g transform="translate(24,222)">
+      <text x="0" y="0" class="callout-bold">Body — a Patient resource:</text>
+    </g>
+
+    <g transform="translate(24,242)" class="mono">
+      <rect x="-8" y="-2" width="688" height="306" rx="4" fill="#ecfdf5"/>
+      <text x="0" y="18">{</text>
+      <text x="0" y="38">  "resourceType": "Patient",</text>
+      <text x="0" y="58">  "identifier": [{</text>
+      <text x="0" y="78">    "system": "http://test-facility.example.org/mrn",</text>
+      <text x="0" y="98">    "value":  "MRN-1001"</text>
+      <text x="0" y="118">  }],</text>
+      <text x="0" y="138">  "name": [{ "family": "Doe", "given": ["John"] }],</text>
+      <text x="0" y="158">  "gender":    "male",</text>
+      <text x="0" y="178">  "birthDate": "1985-04-12",</text>
+      <text x="0" y="198">  "address": [{</text>
+      <text x="0" y="218">    "line":       ["123 Main St"],</text>
+      <text x="0" y="238">    "city":       "Atlanta",</text>
+      <text x="0" y="258">    "state":      "GA",</text>
+      <text x="0" y="278">    "postalCode": "30301"</text>
+      <text x="0" y="298">  }]</text>
+    </g>
+    <g transform="translate(24,560)" class="mono">
+      <text x="0" y="0">}</text>
+    </g>
+
+    <!-- Annotations -->
+    <g transform="translate(24,600)">
+      <circle cx="0" cy="0" r="10" class="pin-fhir"/>
+      <text x="0" y="4" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">1</text>
+      <text x="20" y="4" class="callout-bold">resourceType</text>
+      <text x="132" y="4" class="callout">— every FHIR document declares what it is.</text>
+
+      <circle cx="0" cy="32" r="10" class="pin-fhir"/>
+      <text x="0" y="36" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">2</text>
+      <text x="20" y="36" class="callout-bold">identifier.system</text>
+      <text x="160" y="36" class="callout">— a URL that namespaces the MRN to a facility.</text>
+
+      <circle cx="0" cy="64" r="10" class="pin-fhir"/>
+      <text x="0" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">3</text>
+      <text x="20" y="68" class="callout-bold">"male"</text>
+      <text x="74" y="68" class="callout">— controlled vocabulary, not "M". ISO dates: 1985-04-12.</text>
+
+      <circle cx="0" cy="96" r="10" class="pin-fhir"/>
+      <text x="0" y="100" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">4</text>
+      <text x="20" y="100" class="callout-bold">?identifier=…|MRN-1001</text>
+      <text x="220" y="100" class="callout">= conditional update — create or</text>
+      <text x="20" y="120" class="callout">update by identifier match, no duplicates on resend.</text>
+    </g>
+  </g>
+
+  <!-- ─── Bottom strip: key differences ─── -->
+  <g transform="translate(60,900)">
+    <text x="0" y="0" font-size="22" font-weight="700" fill="#0f172a">Why translate? — what FHIR gives you that v2 doesn't</text>
+
+    <g transform="translate(0,24)">
+      <rect width="290" height="220" rx="8" class="footer-card"/>
+      <text x="20" y="36" class="footer-h">Self-describing</text>
+      <text x="20" y="62" class="footer-b">Field names are right there in</text>
+      <text x="20" y="82" class="footer-b">the JSON. No external spec</text>
+      <text x="20" y="102" class="footer-b">required to know "PID-7 is DOB."</text>
+      <text x="20" y="142" class="footer-h">Web-native</text>
+      <text x="20" y="168" class="footer-b">REST + JSON. Any HTTP client</text>
+      <text x="20" y="188" class="footer-b">can talk to it. Browser-friendly.</text>
+    </g>
+
+    <g transform="translate(310,24)">
+      <rect width="290" height="220" rx="8" class="footer-card"/>
+      <text x="20" y="36" class="footer-h">Typed &amp; validated</text>
+      <text x="20" y="62" class="footer-b">Dates are ISO-8601. Genders</text>
+      <text x="20" y="82" class="footer-b">come from a controlled list.</text>
+      <text x="20" y="102" class="footer-b">Servers reject malformed data.</text>
+      <text x="20" y="142" class="footer-h">Resource graph</text>
+      <text x="20" y="168" class="footer-b">Patient references Encounter</text>
+      <text x="20" y="188" class="footer-b">references Observation… all</text>
+      <text x="20" y="208" class="footer-b">discoverable by URL.</text>
+    </g>
+
+    <g transform="translate(620,24)">
+      <rect width="290" height="220" rx="8" class="footer-card"/>
+      <text x="20" y="36" class="footer-h">Searchable</text>
+      <text x="20" y="62" class="footer-b">GET /Patient?family=Doe just</text>
+      <text x="20" y="82" class="footer-b">works. v2 has no native query —</text>
+      <text x="20" y="102" class="footer-b">you'd need a separate database.</text>
+      <text x="20" y="142" class="footer-h">Idempotent writes</text>
+      <text x="20" y="168" class="footer-b">Conditional update by identifier</text>
+      <text x="20" y="188" class="footer-b">prevents duplicates. v2 leaves</text>
+      <text x="20" y="208" class="footer-b">de-duplication to the receiver.</text>
+    </g>
+
+    <g transform="translate(930,24)">
+      <rect width="290" height="220" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+      <text x="20" y="36" class="footer-h">…but v2 is everywhere</text>
+      <text x="20" y="62" class="footer-b">Real hospitals run v2 today.</text>
+      <text x="20" y="82" class="footer-b">FHIR adoption is rising but</text>
+      <text x="20" y="102" class="footer-b">most live interfaces are still</text>
+      <text x="20" y="122" class="footer-b">v2 over MLLP. So the job is</text>
+      <text x="20" y="142" class="footer-b">usually bridging both — exactly</text>
+      <text x="20" y="162" class="footer-b">what this testbed simulates.</text>
+      <text x="20" y="200" class="footer-b" font-style="italic" fill="#92400e">v2 isn't going away soon.</text>
+    </g>
+
+    <g transform="translate(1240,24)">
+      <rect width="290" height="220" rx="8" class="footer-card"/>
+      <text x="20" y="36" class="footer-h">Wire format</text>
+      <text x="20" y="62" class="footer-b">v2: TCP socket + MLLP bytes</text>
+      <text x="20" y="82" class="footer-b">FHIR: HTTPS + JSON</text>
+      <text x="20" y="122" class="footer-h">Acknowledgment</text>
+      <text x="20" y="148" class="footer-b">v2: an ACK message back on</text>
+      <text x="20" y="168" class="footer-b">the same socket (AA/AE/AR).</text>
+      <text x="20" y="188" class="footer-b">FHIR: a normal HTTP status</text>
+      <text x="20" y="208" class="footer-b">code (201/200/4xx).</text>
+    </g>
+  </g>
+</svg>

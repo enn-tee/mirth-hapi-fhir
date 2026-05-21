@@ -1,0 +1,233 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 38px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-size: 18px; fill: #475569; }
+      .h2 { font-size: 24px; font-weight: 700; fill: #0f172a; }
+      .h3 { font-size: 18px; font-weight: 700; fill: #1e293b; }
+      .body { font-size: 14px; fill: #334155; }
+      .mono { font-family: 'SF Mono', Menlo, monospace; font-size: 13px; fill: #0f172a; }
+      .smono { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; fill: #334155; }
+      .info { fill: #ecfdf5; stroke: #047857; stroke-width: 1.5; }
+      .card { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }
+      .write-card { fill: #ecfdf5; stroke: #047857; stroke-width: 2; }
+      .read-card { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; }
+      .decision { fill: #fef3c7; stroke: #d97706; stroke-width: 2; }
+      .outcome-ok { fill: #d1fae5; stroke: #047857; stroke-width: 2; }
+      .outcome-warn { fill: #fee2e2; stroke: #b91c1c; stroke-width: 2; }
+      .storage { fill: #f5f3ff; stroke: #6d28d9; stroke-width: 2; }
+      .pin { font-size: 13px; font-weight: 800; fill: #ffffff; }
+    </style>
+    <marker id="flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1e293b"/>
+    </marker>
+    <marker id="flowG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#047857"/>
+    </marker>
+    <marker id="flowB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1280" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="60" y="64" class="title">HAPI FHIR — anatomy of the destination server</text>
+  <text x="60" y="94" class="subtitle">HAPI is the reference Java implementation of a FHIR R4 server. It exposes one REST API, stores resources in an embedded database, and validates everything against the spec.</text>
+
+  <!-- ─── "What HAPI is" intro card ─── -->
+  <g transform="translate(60,130)">
+    <rect width="1480" height="120" rx="10" class="info"/>
+    <text x="24" y="34" class="h2">A drop-in FHIR R4 server in one Docker image.</text>
+    <text x="24" y="64" class="body">Out of the box, HAPI gives you every standard FHIR endpoint: <tspan class="mono" font-size="13">GET</tspan> / <tspan class="mono" font-size="13">POST</tspan> / <tspan class="mono" font-size="13">PUT</tspan> / <tspan class="mono" font-size="13">DELETE</tspan> against any of ~145 resource types, plus search,</text>
+    <text x="24" y="86" class="body">history, validation, conditional create/update, transaction bundles, and a self-describing capability statement at <tspan class="mono" font-size="13">/fhir/metadata</tspan>. It needs no code from you.</text>
+    <text x="24" y="108" class="body" font-style="italic" fill="#475569">Beware the name: "HAPI FHIR" (this server) is unrelated to the older "HAPI HL7v2" Java parsing library, even though both are from the same project family.</text>
+  </g>
+
+  <!-- ─── Two paths through HAPI ─── -->
+  <text x="60" y="292" class="h2">Two paths through HAPI — one for writes, one for reads</text>
+
+  <!-- WRITE PATH (left) -->
+  <g transform="translate(60,320)">
+    <rect width="720" height="500" rx="12" class="write-card"/>
+    <text x="24" y="36" class="h3" fill="#064e3b">Write path  ·  conditional update</text>
+    <text x="24" y="58" class="body" fill="#064e3b">What Mirth does when it forwards a v2 message</text>
+
+    <!-- Step 1: Incoming request -->
+    <g transform="translate(24,80)">
+      <rect width="672" height="70" rx="6" fill="#ffffff" stroke="#047857" stroke-width="1.5"/>
+      <circle cx="20" cy="22" r="12" fill="#047857"/>
+      <text x="20" y="27" text-anchor="middle" class="pin">1</text>
+      <text x="44" y="28" class="h3" fill="#064e3b">Incoming request</text>
+      <text x="20" y="54" class="mono" font-size="13">PUT /fhir/Patient?identifier=http://test-facility…/mrn|MRN-1001</text>
+    </g>
+
+    <line x1="380" y1="160" x2="380" y2="190" stroke="#047857" stroke-width="2" marker-end="url(#flowG)"/>
+
+    <!-- Step 2: Search by identifier -->
+    <g transform="translate(24,200)">
+      <rect width="672" height="70" rx="6" fill="#ffffff" stroke="#047857" stroke-width="1.5"/>
+      <circle cx="20" cy="22" r="12" fill="#047857"/>
+      <text x="20" y="27" text-anchor="middle" class="pin">2</text>
+      <text x="44" y="28" class="h3" fill="#064e3b">Search the database for matching identifier</text>
+      <text x="44" y="54" class="body">Translates the <tspan class="mono">?identifier=…</tspan> into SQL against the H2 index.</text>
+    </g>
+
+    <line x1="380" y1="280" x2="380" y2="310" stroke="#047857" stroke-width="2" marker-end="url(#flowG)"/>
+
+    <!-- Step 3: Decision diamond -->
+    <g transform="translate(24,320)">
+      <rect width="672" height="60" rx="6" class="decision"/>
+      <circle cx="20" cy="22" r="12" fill="#d97706"/>
+      <text x="20" y="27" text-anchor="middle" class="pin">3</text>
+      <text x="44" y="28" class="h3" fill="#78350f">How many matches?</text>
+      <text x="44" y="50" class="body" fill="#78350f">Three possible outcomes — see the branches below.</text>
+    </g>
+
+    <!-- Three outcomes -->
+    <g transform="translate(24,400)">
+      <!-- 0 matches → CREATE -->
+      <rect x="0" y="0" width="216" height="80" rx="6" class="outcome-ok"/>
+      <text x="14" y="22" font-size="14" font-weight="700" fill="#064e3b">0 matches  →  CREATE</text>
+      <text x="14" y="44" class="body" fill="#064e3b">Insert as new resource.</text>
+      <text x="14" y="62" class="mono" font-size="12" fill="#064e3b">201 Created</text>
+      <text x="14" y="76" class="smono" fill="#064e3b">Location: /Patient/42/_history/1</text>
+
+      <!-- 1 match → UPDATE -->
+      <rect x="228" y="0" width="216" height="80" rx="6" class="outcome-ok"/>
+      <text x="242" y="22" font-size="14" font-weight="700" fill="#064e3b">1 match  →  UPDATE</text>
+      <text x="242" y="44" class="body" fill="#064e3b">Replace, version goes up.</text>
+      <text x="242" y="62" class="mono" font-size="12" fill="#064e3b">200 OK</text>
+      <text x="242" y="76" class="smono" fill="#064e3b">Location: /Patient/42/_history/2</text>
+
+      <!-- 2+ matches → ERROR -->
+      <rect x="456" y="0" width="216" height="80" rx="6" class="outcome-warn"/>
+      <text x="470" y="22" font-size="14" font-weight="700" fill="#7f1d1d">2+ matches  →  REJECT</text>
+      <text x="470" y="44" class="body" fill="#7f1d1d">Ambiguous — refuses.</text>
+      <text x="470" y="62" class="mono" font-size="12" fill="#7f1d1d">412 Precondition Failed</text>
+      <text x="470" y="76" class="smono" fill="#7f1d1d">OperationOutcome in body</text>
+    </g>
+  </g>
+
+  <!-- READ PATH (right) -->
+  <g transform="translate(820,320)">
+    <rect width="720" height="500" rx="12" class="read-card"/>
+    <text x="24" y="36" class="h3" fill="#1e3a8a">Read path  ·  search</text>
+    <text x="24" y="58" class="body" fill="#1e3a8a">What curl (or any HTTP client) does when verifying</text>
+
+    <!-- Step 1: incoming -->
+    <g transform="translate(24,80)">
+      <rect width="672" height="70" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+      <circle cx="20" cy="22" r="12" fill="#2563eb"/>
+      <text x="20" y="27" text-anchor="middle" class="pin">1</text>
+      <text x="44" y="28" class="h3" fill="#1e3a8a">Incoming request</text>
+      <text x="20" y="54" class="mono" font-size="13">GET /fhir/Patient?family=Doe</text>
+    </g>
+
+    <line x1="380" y1="160" x2="380" y2="190" stroke="#2563eb" stroke-width="2" marker-end="url(#flowB)"/>
+
+    <!-- Step 2: Search index lookup -->
+    <g transform="translate(24,200)">
+      <rect width="672" height="70" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+      <circle cx="20" cy="22" r="12" fill="#2563eb"/>
+      <text x="20" y="27" text-anchor="middle" class="pin">2</text>
+      <text x="44" y="28" class="h3" fill="#1e3a8a">Translate search params → SQL</text>
+      <text x="44" y="54" class="body">FHIR <tspan class="mono">family=Doe</tspan> → indexed lookup on the <tspan class="mono">Patient.family</tspan> column.</text>
+    </g>
+
+    <line x1="380" y1="280" x2="380" y2="310" stroke="#2563eb" stroke-width="2" marker-end="url(#flowB)"/>
+
+    <!-- Step 3: build Bundle -->
+    <g transform="translate(24,320)">
+      <rect width="672" height="70" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+      <circle cx="20" cy="22" r="12" fill="#2563eb"/>
+      <text x="20" y="27" text-anchor="middle" class="pin">3</text>
+      <text x="44" y="28" class="h3" fill="#1e3a8a">Build a searchset Bundle</text>
+      <text x="44" y="54" class="body">Wraps all matches in a <tspan font-weight="700">Bundle</tspan> envelope with <tspan class="mono">"type": "searchset"</tspan>.</text>
+    </g>
+
+    <line x1="380" y1="400" x2="380" y2="430" stroke="#2563eb" stroke-width="2" marker-end="url(#flowB)"/>
+
+    <!-- Step 4: respond -->
+    <g transform="translate(24,440)">
+      <rect width="672" height="40" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+      <text x="20" y="26" class="mono" font-size="13" fill="#1e3a8a">200 OK   ·   {"resourceType":"Bundle","type":"searchset","total":1,"entry":[…]}</text>
+    </g>
+  </g>
+
+  <!-- ─── Storage row ─── -->
+  <text x="60" y="864" class="h2">What HAPI stores — three things, all in the embedded H2 database</text>
+
+  <g transform="translate(60,890)">
+    <!-- Resources -->
+    <g transform="translate(0,0)">
+      <rect width="466" height="180" rx="10" class="storage"/>
+      <text x="20" y="34" class="h3" fill="#4c1d95">Resources</text>
+      <text x="20" y="58" class="body">Each Patient (and every other type) is stored as</text>
+      <text x="20" y="78" class="body">a full JSON document, addressable by URL:</text>
+      <rect x="20" y="92" width="426" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="32" y="113" class="mono">GET /fhir/Patient/42</text>
+      <text x="20" y="146" class="body">Versions are kept — every update creates a new</text>
+      <text x="20" y="166" class="body">history entry. Old versions remain readable.</text>
+    </g>
+
+    <!-- Search indexes -->
+    <g transform="translate(506,0)">
+      <rect width="466" height="180" rx="10" class="storage"/>
+      <text x="20" y="34" class="h3" fill="#4c1d95">Search indexes</text>
+      <text x="20" y="58" class="body">For every search parameter defined in the FHIR</text>
+      <text x="20" y="78" class="body">spec, HAPI maintains a fast index column:</text>
+      <rect x="20" y="92" width="426" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="32" y="113" class="smono">name | family | given | birthdate | identifier | …</text>
+      <text x="20" y="146" class="body">This is what lets <tspan class="mono">?family=Doe</tspan> return in</text>
+      <text x="20" y="166" class="body">milliseconds even with millions of patients.</text>
+    </g>
+
+    <!-- Audit / metadata -->
+    <g transform="translate(1012,0)">
+      <rect width="468" height="180" rx="10" class="storage"/>
+      <text x="20" y="34" class="h3" fill="#4c1d95">Metadata &amp; capability</text>
+      <text x="20" y="58" class="body">HAPI publishes its own description at:</text>
+      <rect x="20" y="72" width="428" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="32" y="93" class="mono">GET /fhir/metadata</text>
+      <text x="20" y="126" class="body">— a CapabilityStatement listing every supported</text>
+      <text x="20" y="146" class="body">resource, search param, and operation. Clients can</text>
+      <text x="20" y="166" class="body">introspect what this server actually does.</text>
+    </g>
+  </g>
+
+  <!-- ─── Gotchas ─── -->
+  <text x="60" y="1108" class="h2">Three gotchas worth knowing up front</text>
+
+  <g transform="translate(60,1132)">
+    <!-- Gotcha 1 -->
+    <g transform="translate(0,0)">
+      <rect width="466" height="130" rx="10" class="card"/>
+      <text x="20" y="32" class="h3">Storage lives in the container</text>
+      <text x="20" y="58" class="body">Out of the box, HAPI uses embedded H2. Doing</text>
+      <text x="20" y="78" class="body"><tspan class="mono">docker rm hapi-fhir</tspan> wipes every Patient,</text>
+      <text x="20" y="98" class="body">Encounter, etc. For real use, mount a volume</text>
+      <text x="20" y="118" class="body">or point HAPI at Postgres via env vars.</text>
+    </g>
+
+    <!-- Gotcha 2 -->
+    <g transform="translate(506,0)">
+      <rect width="466" height="130" rx="10" class="card"/>
+      <text x="20" y="32" class="h3">Header limit + browser cookies</text>
+      <text x="20" y="58" class="body">localhost cookies from any past dev server bloat</text>
+      <text x="20" y="78" class="body">browser requests past the 8 KB default → 400.</text>
+      <text x="20" y="98" class="body">Fix with <tspan class="smono">SERVER_MAX_HTTP_REQUEST_</tspan></text>
+      <text x="20" y="118" class="body"><tspan class="smono">HEADER_SIZE=65536</tspan> on the container.</text>
+    </g>
+
+    <!-- Gotcha 3 -->
+    <g transform="translate(1012,0)">
+      <rect width="468" height="130" rx="10" class="card"/>
+      <text x="20" y="32" class="h3">A 2xx doesn't mean the data is good</text>
+      <text x="20" y="58" class="body">HAPI happily stores resources with empty</text>
+      <text x="20" y="78" class="body">strings, garbage dates, or impossible values</text>
+      <text x="20" y="98" class="body">unless you turn on Profile-based validation.</text>
+      <text x="20" y="118" class="body">"Silent corruption" cases are the worst kind.</text>
+    </g>
+  </g>
+</svg>

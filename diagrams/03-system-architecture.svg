@@ -1,0 +1,230 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1180" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 38px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-size: 18px; fill: #475569; }
+      .h-zone { font-size: 18px; font-weight: 700; fill: #475569; letter-spacing: 0.06em; text-transform: uppercase; }
+      .host-zone { fill: #ffffff; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 6,4; }
+      .docker-zone { fill: #eef2ff; stroke: #6366f1; stroke-width: 2; stroke-dasharray: 6,4; }
+      .container { fill: #ffffff; stroke: #6366f1; stroke-width: 2.5; }
+      .host-tool { fill: #ffffff; stroke: #94a3b8; stroke-width: 2; }
+      .tool-title { font-size: 18px; font-weight: 700; fill: #0f172a; }
+      .tool-sub { font-size: 13px; fill: #475569; }
+      .tool-body { font-size: 13px; fill: #334155; }
+      .port { font-family: 'SF Mono', Menlo, monospace; font-size: 13px; font-weight: 600; fill: #1e293b; }
+      .arrow-label { font-size: 13px; font-weight: 600; fill: #1e293b; }
+      .arrow-sub { font-size: 12px; fill: #64748b; }
+      .legend-text { font-size: 13px; fill: #334155; }
+      .step-num { font-size: 14px; font-weight: 800; fill: #ffffff; }
+      .container-title { font-size: 22px; font-weight: 700; fill: #0f172a; }
+      .container-sub { font-size: 13px; fill: #475569; }
+    </style>
+
+    <marker id="aV2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+    <marker id="aV2dash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/>
+    </marker>
+    <marker id="aFhir" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#047857"/>
+    </marker>
+    <marker id="aAdmin" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1180" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="60" y="64" class="title">How the pieces fit together</text>
+  <text x="60" y="94" class="subtitle">Three programs run on your Mac. Two run inside Docker containers. Everything talks over localhost — but on different ports, by different paths.</text>
+
+  <!-- ─── HOST ZONE ─── -->
+  <rect x="60" y="130" width="1480" height="970" rx="14" class="host-zone"/>
+  <text x="80" y="160" class="h-zone">Your Mac · host machine</text>
+
+  <!-- Host tools row -->
+  <!-- sender.py -->
+  <g transform="translate(100,200)">
+    <rect width="320" height="170" rx="10" class="host-tool"/>
+    <text x="20" y="34" class="tool-title">sender.py</text>
+    <text x="20" y="56" class="tool-sub">Python script (you run it)</text>
+    <line x1="20" y1="68" x2="300" y2="68" stroke="#e2e8f0"/>
+    <text x="20" y="92" class="tool-body">Builds one ADT^A01 message,</text>
+    <text x="20" y="112" class="tool-body">wraps it in MLLP framing bytes,</text>
+    <text x="20" y="132" class="tool-body">opens a TCP socket to Mirth,</text>
+    <text x="20" y="152" class="tool-body">reads back the v2 ACK.</text>
+  </g>
+
+  <!-- Mirth admin (OpenWebStart) -->
+  <g transform="translate(640,200)">
+    <rect width="320" height="170" rx="10" class="host-tool"/>
+    <text x="20" y="34" class="tool-title">Mirth Admin GUI</text>
+    <text x="20" y="56" class="tool-sub">Java Swing, launched via OpenWebStart</text>
+    <line x1="20" y1="68" x2="300" y2="68" stroke="#e2e8f0"/>
+    <text x="20" y="92" class="tool-body">Where you build the channel,</text>
+    <text x="20" y="112" class="tool-body">write the JS transformer, and</text>
+    <text x="20" y="132" class="tool-body">use the Message Browser to</text>
+    <text x="20" y="152" class="tool-body">debug failures.</text>
+  </g>
+
+  <!-- curl -->
+  <g transform="translate(1180,200)">
+    <rect width="320" height="170" rx="10" class="host-tool"/>
+    <text x="20" y="34" class="tool-title">curl  /  any HTTP client</text>
+    <text x="20" y="56" class="tool-sub">For querying / verifying</text>
+    <line x1="20" y1="68" x2="300" y2="68" stroke="#e2e8f0"/>
+    <text x="20" y="92" class="tool-body">Reads from HAPI directly:</text>
+    <text x="20" y="116" class="tool-body" font-family="SF Mono,Menlo,monospace" font-size="12">GET /fhir/Patient?family=Doe</text>
+    <text x="20" y="142" class="tool-body">Bypasses Mirth completely on</text>
+    <text x="20" y="162" class="tool-body">the read path.</text>
+  </g>
+
+  <!-- ─── DOCKER ZONE ─── -->
+  <rect x="100" y="500" width="1400" height="540" rx="14" class="docker-zone"/>
+  <text x="120" y="530" class="h-zone" fill="#4338ca">Docker · two containers, no shared network</text>
+
+  <!-- Mirth container -->
+  <g transform="translate(140,560)">
+    <rect width="620" height="450" rx="10" class="container"/>
+    <text x="20" y="34" class="container-title">CONTAINER · mirth</text>
+    <text x="20" y="56" class="container-sub">image: nextgenhealthcare/connect:latest  ·  -Xmx2g</text>
+    <line x1="20" y1="72" x2="600" y2="72" stroke="#e2e8f0"/>
+
+    <!-- Three sub-boxes for the listener / transformer / sender -->
+    <g transform="translate(20,90)">
+      <rect width="580" height="76" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+      <text x="14" y="24" font-size="15" font-weight="700" fill="#7c2d12">① TCP Listener  ·  MLLP</text>
+      <text x="14" y="46" font-size="13" fill="#334155">Strips \x0b…\x1c\x0d framing.</text>
+      <text x="14" y="64" font-size="13" fill="#334155">Parses raw bytes into msg['PID']['PID.5']… etc.</text>
+      <text x="430" y="44" class="port">port 8080 (internal)</text>
+      <text x="430" y="62" class="port">+ TCP 6661 listener</text>
+    </g>
+
+    <g transform="translate(20,180)">
+      <rect width="580" height="76" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+      <text x="14" y="24" font-size="15" font-weight="700" fill="#7c2d12">② Source Transformer  ·  JavaScript</text>
+      <text x="14" y="46" font-size="13" fill="#334155">Pulls fields from PID, normalizes (M → male,</text>
+      <text x="14" y="64" font-size="13" fill="#334155">YYYYMMDD → YYYY-MM-DD), stashes in channelMap.</text>
+    </g>
+
+    <g transform="translate(20,270)">
+      <rect width="580" height="76" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+      <text x="14" y="24" font-size="15" font-weight="700" fill="#064e3b">③ HTTP Sender  →  FHIR</text>
+      <text x="14" y="46" font-size="13" fill="#334155">Expands ${PATIENT_MRN}, ${LAST_NAME}… into the JSON body.</text>
+      <text x="14" y="64" font-size="13" fill="#334155">PUTs to host.docker.internal:4005/fhir/Patient?identifier=…</text>
+    </g>
+
+    <g transform="translate(20,360)">
+      <rect width="580" height="76" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="14" y="24" font-size="15" font-weight="700" fill="#7c2d12">⓪ ACK builder  (automatic)</text>
+      <text x="14" y="46" font-size="13" fill="#334155">Mirth generates an MSH|…|ACK + MSA|AA|… reply,</text>
+      <text x="14" y="64" font-size="13" fill="#334155">sends it back over the still-open TCP socket to sender.py.</text>
+    </g>
+  </g>
+
+  <!-- HAPI container -->
+  <g transform="translate(840,560)">
+    <rect width="620" height="450" rx="10" class="container"/>
+    <text x="20" y="34" class="container-title">CONTAINER · hapi-fhir</text>
+    <text x="20" y="56" class="container-sub">image: hapiproject/hapi:latest  ·  H2 embedded DB  ·  FHIR R4</text>
+    <line x1="20" y1="72" x2="600" y2="72" stroke="#e2e8f0"/>
+
+    <g transform="translate(20,90)">
+      <rect width="580" height="100" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+      <text x="14" y="24" font-size="15" font-weight="700" fill="#064e3b">REST endpoints  ·  /fhir</text>
+      <text x="14" y="46" font-size="13" fill="#334155">PUT  /Patient?identifier=…   → conditional update (create OR update)</text>
+      <text x="14" y="66" font-size="13" fill="#334155">GET  /Patient?family=Doe     → searchset Bundle (JSON)</text>
+      <text x="14" y="86" font-size="13" fill="#334155">GET  /metadata               → server capability statement</text>
+      <text x="430" y="44" class="port">port 8080 (internal)</text>
+    </g>
+
+    <g transform="translate(20,205)">
+      <rect width="580" height="80" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+      <text x="14" y="24" font-size="15" font-weight="700" fill="#064e3b">FHIR engine  ·  Spring Boot + HAPI lib</text>
+      <text x="14" y="46" font-size="13" fill="#334155">Validates resources against R4 schemas.</text>
+      <text x="14" y="66" font-size="13" fill="#334155">Translates search params (family=Doe) into SQL against H2 indexes.</text>
+    </g>
+
+    <g transform="translate(20,300)">
+      <rect width="580" height="80" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+      <text x="14" y="24" font-size="15" font-weight="700" fill="#064e3b">H2 embedded database</text>
+      <text x="14" y="46" font-size="13" fill="#334155">Persists resources, version history, and search indexes.</text>
+      <text x="14" y="66" font-size="13" fill="#334155">Lives inside the container — `docker rm` wipes everything.</text>
+    </g>
+
+    <g transform="translate(20,395)">
+      <text x="14" y="0" font-size="12" fill="#64748b" font-style="italic">Note: HAPI never initiates traffic — it only responds to incoming HTTP.</text>
+    </g>
+  </g>
+
+  <!-- ─── ARROWS / PORT MAPPINGS ─── -->
+
+  <!-- ① sender.py → Mirth :6661 (MLLP) -->
+  <g>
+    <path d="M260,370 L260,560" stroke="#c2410c" stroke-width="3" fill="none" marker-end="url(#aV2)"/>
+    <rect x="160" y="420" width="240" height="64" rx="6" fill="#fff7ed" stroke="#c2410c"/>
+    <text x="280" y="442" text-anchor="middle" class="arrow-label" fill="#7c2d12">① HL7 v2 over MLLP</text>
+    <text x="280" y="462" text-anchor="middle" class="port" fill="#7c2d12">host :6661  →  container :6661</text>
+    <text x="280" y="478" text-anchor="middle" class="arrow-sub">raw TCP socket</text>
+  </g>
+
+  <!-- ⓪ ACK from Mirth → sender.py (dashed, same socket) -->
+  <g>
+    <path d="M210,560 L210,370" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="6,4" fill="none" marker-end="url(#aV2dash)"/>
+    <text x="120" y="450" class="arrow-sub" fill="#9a3412">⓪ ACK back</text>
+    <text x="120" y="466" class="arrow-sub" fill="#9a3412">(same socket)</text>
+  </g>
+
+  <!-- Admin (Swing GUI) → Mirth :4443 (HTTPS) -->
+  <g>
+    <path d="M780,370 L520,560" stroke="#6d28d9" stroke-width="3" fill="none" marker-end="url(#aAdmin)"/>
+    <rect x="540" y="420" width="280" height="64" rx="6" fill="#f5f3ff" stroke="#6d28d9"/>
+    <text x="680" y="442" text-anchor="middle" class="arrow-label" fill="#4c1d95">Admin REST + Swing client</text>
+    <text x="680" y="462" text-anchor="middle" class="port" fill="#4c1d95">host :4443  →  container :8443</text>
+    <text x="680" y="478" text-anchor="middle" class="arrow-sub">HTTPS, self-signed cert</text>
+  </g>
+
+  <!-- ③ curl → HAPI :4005 (HTTP) -->
+  <g>
+    <path d="M1340,370 L1340,560" stroke="#047857" stroke-width="3" fill="none" marker-end="url(#aFhir)"/>
+    <rect x="1180" y="420" width="320" height="64" rx="6" fill="#ecfdf5" stroke="#047857"/>
+    <text x="1340" y="442" text-anchor="middle" class="arrow-label" fill="#064e3b">③ FHIR read path (direct)</text>
+    <text x="1340" y="462" text-anchor="middle" class="port" fill="#064e3b">host :4005  →  container :8080</text>
+    <text x="1340" y="478" text-anchor="middle" class="arrow-sub">no Mirth involvement</text>
+  </g>
+
+  <!-- ② Mirth → HAPI via host.docker.internal (the awkward path) -->
+  <g>
+    <!-- Path: out the right side of Mirth, up into the host zone, across,
+         and back down through the top of HAPI. Routes around the label below. -->
+    <path d="M760,620 L790,620 L790,460 L1140,460 L1140,560"
+          stroke="#047857" stroke-width="3" fill="none" marker-end="url(#aFhir)"/>
+    <rect x="800" y="510" width="276" height="46" rx="6" fill="#ecfdf5" stroke="#047857" opacity="0"/>
+    <rect x="820" y="378" width="280" height="46" rx="6" fill="#ecfdf5" stroke="#047857"/>
+    <text x="960" y="397" text-anchor="middle" class="arrow-label" fill="#064e3b">② FHIR write path · via host.docker.internal</text>
+    <text x="960" y="415" text-anchor="middle" class="arrow-sub">leaves Mirth container, returns through host port 4005</text>
+  </g>
+
+  <!-- ─── Legend / footer notes ─── -->
+  <g transform="translate(100,1050)">
+    <text x="0" y="0" font-size="15" font-weight="700" fill="#0f172a">Key topology gotchas</text>
+    <g transform="translate(0,30)">
+      <circle cx="6" cy="6" r="4" fill="#c2410c"/>
+      <text x="20" y="10" class="legend-text"><tspan font-weight="600">v2/MLLP</tspan> (orange)  and  </text>
+      <circle cx="186" cy="6" r="4" fill="#047857"/>
+      <text x="200" y="10" class="legend-text"><tspan font-weight="600">FHIR/HTTPS</tspan> (green) take completely different routes — same destination, different paths.</text>
+    </g>
+    <g transform="translate(0,56)">
+      <circle cx="6" cy="6" r="4" fill="#6d28d9"/>
+      <text x="20" y="10" class="legend-text">The admin GUI is a separate, third channel (purple) — used for configuring, not for normal message flow.</text>
+    </g>
+    <g transform="translate(0,82)">
+      <text x="0" y="10" class="legend-text">•  The Mirth → HAPI hop does NOT go through a shared Docker network. It exits the Mirth container, traverses <tspan font-family="SF Mono,Menlo,monospace" fill="#1e293b">host.docker.internal</tspan>, and re-enters HAPI via the host port mapping.</text>
+    </g>
+    <g transform="translate(0,108)">
+      <text x="0" y="10" class="legend-text">•  Channel definitions and FHIR resources both live inside containers. `docker rm` wipes both. See SETUP.md for export/import.</text>
+    </g>
+  </g>
+</svg>

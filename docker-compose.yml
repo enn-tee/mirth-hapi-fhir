@@ -1,0 +1,30 @@
+name: hapi-sandbox
+
+services:
+  hapi-fhir:
+    image: hapiproject/hapi:latest
+    container_name: hapi-fhir
+    restart: unless-stopped
+    ports:
+      - "4005:8080"
+
+  mirth:
+    image: nextgenhealthcare/connect:latest
+    container_name: mirth
+    restart: unless-stopped
+    environment:
+      DATABASE: derby
+      VMOPTIONS: -Xmx2g,-Xms512m
+    ports:
+      # 4443 host → 8443 container: HTTPS admin/API. Must match the JNLP codebase
+      # and the <argument> URL patched in SETUP.md step 4.
+      - "4443:8443"
+      - "4006:8080"
+      - "6661:6661"
+    volumes:
+      - mirth_appdata:/opt/connect/appdata
+      - mirth_extensions:/opt/connect/custom-extensions
+
+volumes:
+  mirth_appdata:
+  mirth_extensions:

@@ -1,0 +1,248 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 38px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-size: 18px; fill: #475569; }
+      .h2 { font-size: 24px; font-weight: 700; fill: #0f172a; }
+      .h3 { font-size: 18px; font-weight: 700; fill: #1e293b; }
+      .body { font-size: 14px; fill: #334155; }
+      .stage-title { font-size: 16px; font-weight: 700; fill: #0f172a; }
+      .stage-sub { font-size: 12px; fill: #475569; }
+      .stage-mono { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; fill: #0f172a; }
+      .pin { font-size: 13px; font-weight: 800; fill: #ffffff; }
+      .src { fill: #fff7ed; stroke: #c2410c; stroke-width: 2; }
+      .xfm { fill: #fef3c7; stroke: #d97706; stroke-width: 2; }
+      .dst { fill: #ecfdf5; stroke: #047857; stroke-width: 2; }
+      .map { fill: #f5f3ff; stroke: #6d28d9; stroke-width: 2; }
+      .card { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }
+      .info { fill: #eff6ff; stroke: #2563eb; stroke-width: 1.5; }
+    </style>
+    <marker id="flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1e293b"/>
+    </marker>
+    <marker id="back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/>
+    </marker>
+    <marker id="bus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6d28d9"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1280" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="60" y="64" class="title">Mirth Connect — anatomy of a channel</text>
+  <text x="60" y="94" class="subtitle">Mirth is an integration engine. It receives messages in one protocol, transforms them, and forwards them in another. Everything is a "channel."</text>
+
+  <!-- ─── "What Mirth is" intro card ─── -->
+  <g transform="translate(60,130)">
+    <rect width="1480" height="120" rx="10" class="info"/>
+    <text x="24" y="34" class="h2">A channel is a pipeline.</text>
+    <text x="24" y="64" class="body">One <tspan font-weight="700">Source connector</tspan> (where messages come in) → optional <tspan font-weight="700">filter</tspan> + <tspan font-weight="700">transformer</tspan> → one or more <tspan font-weight="700">Destination connectors</tspan> (where they go out) →</text>
+    <text x="24" y="86" class="body">optional <tspan font-weight="700">response transformer</tspan> → an <tspan font-weight="700">ACK</tspan> back to the sender. All five stages are scriptable in JavaScript. This lab uses TCP Listener in / HTTP Sender out.</text>
+    <text x="24" y="108" class="body" font-style="italic" fill="#475569">Other engines (Rhapsody, InterSystems IRIS, Cloverleaf, AWS HealthLake) follow the same shape. Once you understand a Mirth channel, you can read any of them.</text>
+  </g>
+
+  <!-- ─── The pipeline visualization ─── -->
+  <text x="60" y="292" class="h2">The pipeline, end to end</text>
+
+  <!-- channelMap bus -->
+  <g transform="translate(60,320)">
+    <rect width="1480" height="70" rx="10" class="map"/>
+    <text x="20" y="30" class="h3" fill="#4c1d95">channelMap   ·   the shared data bus</text>
+    <text x="20" y="52" class="body">JavaScript object visible to every stage downstream of the source transformer. The transformer puts values in; the destination's <tspan font-family="SF Mono,Menlo,monospace">${VAR}</tspan> templates pull them out at send time.</text>
+  </g>
+
+  <!-- Pipeline row -->
+  <!-- Vertical drop arrows from channelMap to stage tops -->
+  <g stroke="#6d28d9" stroke-width="1.5" stroke-dasharray="4,3" fill="none">
+    <line x1="240" y1="390" x2="240" y2="430" marker-end="url(#bus)"/>
+    <line x1="800" y1="390" x2="800" y2="430" marker-end="url(#bus)"/>
+    <line x1="1080" y1="390" x2="1080" y2="430" marker-end="url(#bus)"/>
+  </g>
+
+  <!-- Stage 1: Source Connector (TCP Listener) -->
+  <g transform="translate(60,440)">
+    <rect width="240" height="200" rx="10" class="src"/>
+    <circle cx="24" cy="24" r="14" fill="#c2410c"/>
+    <text x="24" y="29" text-anchor="middle" class="pin">1</text>
+    <text x="50" y="29" class="stage-title">Source Connector</text>
+    <text x="20" y="62" class="stage-sub">TCP Listener (MLLP mode)</text>
+    <line x1="20" y1="74" x2="220" y2="74" stroke="#fed7aa"/>
+    <text x="20" y="96" class="body">Binds to port 6661.</text>
+    <text x="20" y="118" class="body">Strips MLLP framing</text>
+    <text x="20" y="138" class="body">bytes from each frame.</text>
+    <text x="20" y="160" class="body">Parses bytes into a</text>
+    <text x="20" y="180" class="body">navigable msg object</text>
+    <text x="20" y="200" class="body">(via HL7 v2.x data type).</text>
+  </g>
+
+  <!-- Stage 2: Source Filter -->
+  <g transform="translate(330,440)">
+    <rect width="180" height="200" rx="10" class="xfm" stroke-dasharray="6,4"/>
+    <circle cx="24" cy="24" r="14" fill="#d97706"/>
+    <text x="24" y="29" text-anchor="middle" class="pin">2</text>
+    <text x="50" y="29" class="stage-title">Source Filter</text>
+    <text x="20" y="62" class="stage-sub">optional · JS</text>
+    <line x1="20" y1="74" x2="160" y2="74" stroke="#fcd34d"/>
+    <text x="20" y="96" class="body">Drop messages that</text>
+    <text x="20" y="118" class="body">shouldn't pass through.</text>
+    <text x="20" y="144" class="body" font-style="italic" fill="#92400e">Not used in this</text>
+    <text x="20" y="164" class="body" font-style="italic" fill="#92400e">lab — every message</text>
+    <text x="20" y="184" class="body" font-style="italic" fill="#92400e">flows through.</text>
+  </g>
+
+  <!-- Stage 3: Source Transformer -->
+  <g transform="translate(540,440)">
+    <rect width="240" height="200" rx="10" class="xfm"/>
+    <circle cx="24" cy="24" r="14" fill="#d97706"/>
+    <text x="24" y="29" text-anchor="middle" class="pin">3</text>
+    <text x="50" y="29" class="stage-title">Source Transformer</text>
+    <text x="20" y="62" class="stage-sub">JavaScript (the workhorse)</text>
+    <line x1="20" y1="74" x2="220" y2="74" stroke="#fcd34d"/>
+    <text x="20" y="96" class="stage-mono">channelMap.put(</text>
+    <text x="20" y="114" class="stage-mono">  'PATIENT_MRN',</text>
+    <text x="20" y="132" class="stage-mono">  msg['PID']['PID.3']</text>
+    <text x="20" y="150" class="stage-mono">     ['PID.3.1']</text>
+    <text x="20" y="168" class="stage-mono">     .toString());</text>
+    <text x="20" y="194" class="body" font-style="italic" fill="#92400e">Reshapes v2 → FHIR.</text>
+  </g>
+
+  <!-- Stage 4: Destination Filter + Transformer -->
+  <g transform="translate(810,440)">
+    <rect width="180" height="200" rx="10" class="xfm" stroke-dasharray="6,4"/>
+    <circle cx="24" cy="24" r="14" fill="#d97706"/>
+    <text x="24" y="29" text-anchor="middle" class="pin">4</text>
+    <text x="50" y="29" class="stage-title">Dest. Filter +</text>
+    <text x="50" y="48" class="stage-title">Transformer</text>
+    <text x="20" y="80" class="stage-sub">optional · per destination</text>
+    <line x1="20" y1="92" x2="160" y2="92" stroke="#fcd34d"/>
+    <text x="20" y="114" class="body">Per-destination tweaks</text>
+    <text x="20" y="134" class="body">before sending.</text>
+    <text x="20" y="160" class="body" font-style="italic" fill="#92400e">Not used here —</text>
+    <text x="20" y="180" class="body" font-style="italic" fill="#92400e">all logic lives in the</text>
+    <text x="20" y="200" class="body" font-style="italic" fill="#92400e">source transformer.</text>
+  </g>
+
+  <!-- Stage 5: Destination Connector -->
+  <g transform="translate(1020,440)">
+    <rect width="240" height="200" rx="10" class="dst"/>
+    <circle cx="24" cy="24" r="14" fill="#047857"/>
+    <text x="24" y="29" text-anchor="middle" class="pin">5</text>
+    <text x="50" y="29" class="stage-title">Destination Connector</text>
+    <text x="20" y="62" class="stage-sub">HTTP Sender</text>
+    <line x1="20" y1="74" x2="220" y2="74" stroke="#a7f3d0"/>
+    <text x="20" y="96" class="body">Expands <tspan font-family="SF Mono,Menlo,monospace">${PATIENT_MRN}</tspan></text>
+    <text x="20" y="116" class="body">etc. from channelMap.</text>
+    <text x="20" y="142" class="body">PUTs the JSON body to</text>
+    <text x="20" y="162" class="body">HAPI's FHIR endpoint.</text>
+    <text x="20" y="186" class="body" font-style="italic" fill="#064e3b">Could equally be a</text>
+    <text x="20" y="206" class="body" font-style="italic" fill="#064e3b">DB writer, file writer…</text>
+  </g>
+
+  <!-- Stage 6: Response Transformer -->
+  <g transform="translate(1290,440)">
+    <rect width="250" height="200" rx="10" class="xfm" stroke-dasharray="6,4"/>
+    <circle cx="24" cy="24" r="14" fill="#d97706"/>
+    <text x="24" y="29" text-anchor="middle" class="pin">6</text>
+    <text x="50" y="29" class="stage-title">Response</text>
+    <text x="50" y="48" class="stage-title">Transformer</text>
+    <text x="20" y="80" class="stage-sub">optional · runs after HTTP reply</text>
+    <line x1="20" y1="92" x2="230" y2="92" stroke="#fcd34d"/>
+    <text x="20" y="114" class="body">Inspect HAPI's status</text>
+    <text x="20" y="134" class="body">code; if not 2xx, set</text>
+    <text x="20" y="154" class="body">the ACK to AE/AR so the</text>
+    <text x="20" y="174" class="body">sender knows storage</text>
+    <text x="20" y="194" class="body">actually failed.</text>
+  </g>
+
+  <!-- Flow arrows between stages -->
+  <g stroke="#1e293b" stroke-width="2.5" fill="none">
+    <line x1="300" y1="540" x2="330" y2="540" marker-end="url(#flow)"/>
+    <line x1="510" y1="540" x2="540" y2="540" marker-end="url(#flow)"/>
+    <line x1="780" y1="540" x2="810" y2="540" marker-end="url(#flow)"/>
+    <line x1="990" y1="540" x2="1020" y2="540" marker-end="url(#flow)"/>
+    <line x1="1260" y1="540" x2="1290" y2="540" marker-end="url(#flow)"/>
+  </g>
+
+  <!-- Message direction label -->
+  <text x="800" y="675" text-anchor="middle" font-size="13" fill="#64748b" font-style="italic">a single message flows left → right; one channel, many stages</text>
+
+  <!-- ─── ACK return path ─── -->
+  <g transform="translate(60,710)">
+    <rect width="1480" height="80" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="6,4"/>
+    <text x="20" y="32" class="h3" fill="#7c2d12">ACK return  ·  built automatically by Mirth, sent back over the same TCP socket</text>
+    <text x="20" y="58" class="body">Result code defaults to <tspan font-weight="700" fill="#7c2d12">AA</tspan> (success) the moment the channel accepts the message — <tspan font-style="italic">before</tspan> the destination has actually fired.</text>
+    <text x="20" y="76" class="body">That's why a real-world integration needs a response transformer (stage 6) to downgrade ACKs to <tspan font-weight="700" fill="#7c2d12">AE</tspan> when the HAPI call returns 4xx/5xx.</text>
+  </g>
+  <!-- arrow ACK from right back to left, below the pipeline -->
+  <g stroke="#ea580c" stroke-width="2" stroke-dasharray="6,4" fill="none">
+    <path d="M180,710 L180,660 L1410,660 L1410,710" marker-end="url(#back)"/>
+  </g>
+  <text x="800" y="652" text-anchor="middle" font-size="13" fill="#9a3412">ACK travels back to the sender ⓪ — same socket as the incoming message</text>
+
+  <!-- ─── Bottom row: three context cards ─── -->
+  <g transform="translate(60,820)">
+    <text x="0" y="0" class="h2">Things to know before you click around the admin GUI</text>
+  </g>
+
+  <!-- Card A: Scripts vs Transformers -->
+  <g transform="translate(60,850)">
+    <rect width="466" height="380" rx="10" class="card"/>
+    <text x="20" y="36" class="h3">JavaScript scopes — not all "scripts" are equal</text>
+    <line x1="20" y1="50" x2="446" y2="50" stroke="#e2e8f0"/>
+    <text x="20" y="78" class="body">Mirth has at least six JS scopes:</text>
+    <text x="40" y="102" class="body">•  Channel <tspan font-weight="600">Deploy / Undeploy</tspan> scripts (run once)</text>
+    <text x="40" y="124" class="body">•  Channel <tspan font-weight="600">Preprocessor / Postprocessor</tspan> (per message)</text>
+    <text x="40" y="146" class="body">•  <tspan font-weight="600">Source filter</tspan> + <tspan font-weight="600">Source transformer</tspan></text>
+    <text x="40" y="168" class="body">•  <tspan font-weight="600">Destination filter</tspan> + <tspan font-weight="600">Destination transformer</tspan></text>
+    <text x="40" y="190" class="body">•  <tspan font-weight="600">Response transformer</tspan></text>
+    <text x="20" y="222" class="body">Each scope has different available variables.</text>
+    <text x="20" y="246" class="body" fill="#7c2d12" font-weight="600">⚠  Putting your transformation in the wrong scope</text>
+    <text x="20" y="266" class="body" fill="#7c2d12" font-weight="600">is the most common "why doesn't my variable</text>
+    <text x="20" y="286" class="body" fill="#7c2d12" font-weight="600">have a value" bug.</text>
+    <text x="20" y="320" class="body" font-style="italic">For this lab: put the JS in the <tspan font-weight="700">Source</tspan></text>
+    <text x="20" y="340" class="body" font-style="italic"><tspan font-weight="700">Transformer</tspan> — not the Scripts tab.</text>
+    <text x="20" y="364" class="body" font-style="italic" fill="#475569">(Scripts tab = channel-lifecycle, not per-message.)</text>
+  </g>
+
+  <!-- Card B: Message Browser -->
+  <g transform="translate(566,850)">
+    <rect width="466" height="380" rx="10" class="card"/>
+    <text x="20" y="36" class="h3">The Message Browser — your debugger</text>
+    <line x1="20" y1="50" x2="446" y2="50" stroke="#e2e8f0"/>
+    <text x="20" y="78" class="body">Every message that ever passes through a</text>
+    <text x="20" y="98" class="body">channel is stored. Open the Dashboard, right-</text>
+    <text x="20" y="118" class="body">click the channel → <tspan font-weight="700">View Messages</tspan>.</text>
+    <text x="20" y="150" class="body">For each message you can inspect:</text>
+    <text x="40" y="174" class="body">•  <tspan font-weight="600">Raw</tspan> — exact bytes received</text>
+    <text x="40" y="196" class="body">•  <tspan font-weight="600">Processed</tspan> — after the source transformer</text>
+    <text x="40" y="218" class="body">•  <tspan font-weight="600">Mappings</tspan> — every channelMap entry</text>
+    <text x="40" y="240" class="body">•  <tspan font-weight="600">Destinations</tspan> — HTTP request + response</text>
+    <text x="40" y="262" class="body">•  <tspan font-weight="600">Errors</tspan> — JS stack traces, parse failures</text>
+    <text x="20" y="296" class="body" fill="#064e3b" font-weight="600">99% of real-world v2/FHIR debugging</text>
+    <text x="20" y="316" class="body" fill="#064e3b" font-weight="600">happens in this one screen.</text>
+    <text x="20" y="350" class="body" font-style="italic" fill="#475569">If the Patient in HAPI has empty fields, it's</text>
+    <text x="20" y="370" class="body" font-style="italic" fill="#475569">almost always the Mappings tab telling you why.</text>
+  </g>
+
+  <!-- Card C: msg object navigation -->
+  <g transform="translate(1072,850)">
+    <rect width="468" height="380" rx="10" class="card"/>
+    <text x="20" y="36" class="h3">The <tspan font-family="SF Mono,Menlo,monospace">msg</tspan> object — how JS sees v2</text>
+    <line x1="20" y1="50" x2="448" y2="50" stroke="#e2e8f0"/>
+    <text x="20" y="78" class="body">After parsing, the raw v2 message becomes an</text>
+    <text x="20" y="98" class="body">E4X-style object navigable by segment / field /</text>
+    <text x="20" y="118" class="body">component / subcomponent:</text>
+    <rect x="20" y="138" width="428" height="120" rx="6" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="36" y="162" class="stage-mono" font-size="13">msg['PID']        // the PID segment</text>
+    <text x="36" y="184" class="stage-mono" font-size="13">msg['PID']['PID.5']         // field 5 (Name)</text>
+    <text x="36" y="206" class="stage-mono" font-size="13">msg['PID']['PID.5']['PID.5.1']</text>
+    <text x="36" y="226" class="stage-mono" font-size="13">                           // component 1 (family)</text>
+    <text x="36" y="248" class="stage-mono" font-size="13">    .toString()            // → "Doe"</text>
+    <text x="20" y="284" class="body">Always call <tspan font-family="SF Mono,Menlo,monospace">.toString()</tspan> — the raw value is</text>
+    <text x="20" y="304" class="body">an XML-like node, not a string.</text>
+    <text x="20" y="336" class="body" fill="#7c2d12" font-weight="600">⚠  This only works if the source data type</text>
+    <text x="20" y="356" class="body" fill="#7c2d12" font-weight="600">is set to HL7 v2.x. "Raw" turns it into a blob.</text>
+  </g>
+</svg>

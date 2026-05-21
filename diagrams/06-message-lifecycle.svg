@@ -1,0 +1,225 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1340" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, system-ui, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 38px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-size: 18px; fill: #475569; }
+      .lane-title { font-size: 18px; font-weight: 700; fill: #ffffff; }
+      .lane-sub { font-size: 12px; fill: #ffffff; opacity: 0.9; }
+      .msg-label { font-size: 14px; font-weight: 600; fill: #0f172a; }
+      .msg-mono { font-family: 'SF Mono', Menlo, monospace; font-size: 12px; fill: #0f172a; }
+      .activation-label { font-size: 13px; fill: #1e293b; }
+      .step-num { font-size: 14px; font-weight: 800; fill: #ffffff; }
+      .body { font-size: 14px; fill: #334155; }
+      .h3 { font-size: 18px; font-weight: 700; fill: #1e293b; }
+      .lane-host { fill: #475569; }
+      .lane-v2 { fill: #c2410c; }
+      .lane-bridge { fill: #d97706; }
+      .lane-fhir { fill: #047857; }
+      .lifeline { stroke: #cbd5e1; stroke-width: 1.5; stroke-dasharray: 5,4; }
+      .activation-host { fill: #f1f5f9; stroke: #475569; stroke-width: 1.5; }
+      .activation-v2 { fill: #fff7ed; stroke: #c2410c; stroke-width: 1.5; }
+      .activation-bridge { fill: #fef3c7; stroke: #d97706; stroke-width: 1.5; }
+      .activation-fhir { fill: #ecfdf5; stroke: #047857; stroke-width: 1.5; }
+      .footer-card { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }
+    </style>
+    <marker id="aBlack" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0f172a"/>
+    </marker>
+    <marker id="aOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+    <marker id="aGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#047857"/>
+    </marker>
+  </defs>
+
+  <rect width="1800" height="1340" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="60" y="64" class="title">Lifecycle of one ADT^A01 message</text>
+  <text x="60" y="94" class="subtitle">Sequence diagram tracing a single patient admission from <tspan font-family="SF Mono,Menlo,monospace">sender.py</tspan> all the way to the H2 database in HAPI, and the ACK on the return trip.</text>
+
+  <!-- ─── Lane headers ─── -->
+  <!-- sender.py -->
+  <g>
+    <rect x="100" y="150" width="280" height="64" rx="8" class="lane-host"/>
+    <text x="240" y="180" text-anchor="middle" class="lane-title">sender.py</text>
+    <text x="240" y="202" text-anchor="middle" class="lane-sub">Python script · on the host</text>
+    <line x1="240" y1="214" x2="240" y2="1200" class="lifeline"/>
+  </g>
+
+  <!-- Mirth: TCP Listener (MLLP) -->
+  <g>
+    <rect x="540" y="150" width="320" height="64" rx="8" class="lane-v2"/>
+    <text x="700" y="180" text-anchor="middle" class="lane-title">Mirth · TCP Listener</text>
+    <text x="700" y="202" text-anchor="middle" class="lane-sub">port 6661 · MLLP framing · HL7 v2 parser</text>
+    <line x1="700" y1="214" x2="700" y2="1200" class="lifeline"/>
+  </g>
+
+  <!-- Mirth: Transformer + HTTP Sender (bridge) -->
+  <g>
+    <rect x="1020" y="150" width="340" height="64" rx="8" class="lane-bridge"/>
+    <text x="1190" y="180" text-anchor="middle" class="lane-title">Mirth · Transformer + HTTP Sender</text>
+    <text x="1190" y="202" text-anchor="middle" class="lane-sub">JavaScript · channelMap · expands ${VAR} into JSON</text>
+    <line x1="1190" y1="214" x2="1190" y2="1200" class="lifeline"/>
+  </g>
+
+  <!-- HAPI FHIR -->
+  <g>
+    <rect x="1520" y="150" width="220" height="64" rx="8" class="lane-fhir"/>
+    <text x="1630" y="180" text-anchor="middle" class="lane-title">HAPI FHIR + H2</text>
+    <text x="1630" y="202" text-anchor="middle" class="lane-sub">FHIR R4 server</text>
+    <line x1="1630" y1="214" x2="1630" y2="1200" class="lifeline"/>
+  </g>
+
+  <!-- ─── Step 1: sender.py builds + opens socket ─── -->
+  <g transform="translate(0,250)">
+    <rect x="230" y="0" width="20" height="60" class="activation-host"/>
+    <circle cx="80" cy="20" r="14" fill="#475569"/>
+    <text x="80" y="25" text-anchor="middle" class="step-num">1</text>
+    <text x="100" y="20" class="msg-label">Build message, wrap in MLLP, open TCP</text>
+    <text x="100" y="40" class="activation-label">sender.py runs locally — no network yet</text>
+  </g>
+
+  <!-- Arrow 1 → 2: TCP send -->
+  <g transform="translate(0,320)">
+    <line x1="250" y1="0" x2="700" y2="0" stroke="#c2410c" stroke-width="2.5" marker-end="url(#aOrange)"/>
+    <text x="475" y="-8" text-anchor="middle" class="msg-label" fill="#7c2d12">TCP : \x0b MSH|^~\&amp;|… ADT^A01 … \x1c\x0d</text>
+    <text x="475" y="14" text-anchor="middle" class="activation-label" fill="#7c2d12">one MLLP frame · raw bytes over a TCP socket to localhost:6661</text>
+  </g>
+
+  <!-- Step 2: Listener strips MLLP + parses -->
+  <g transform="translate(0,350)">
+    <rect x="690" y="0" width="20" height="90" class="activation-v2"/>
+    <circle cx="540" cy="20" r="14" fill="#c2410c"/>
+    <text x="540" y="25" text-anchor="middle" class="step-num">2</text>
+    <text x="445" y="40" class="msg-label">Strip framing, parse</text>
+    <text x="445" y="58" class="activation-label">Drops \x0b/\x1c/\x0d. Parses the v2 payload</text>
+    <text x="445" y="76" class="activation-label">into the msg object (PID, MSH, EVN, PV1).</text>
+  </g>
+
+  <!-- Arrow 2 → 3: in-process pass to transformer -->
+  <g transform="translate(0,470)">
+    <line x1="710" y1="0" x2="1190" y2="0" stroke="#c2410c" stroke-width="2.5" marker-end="url(#aOrange)"/>
+    <text x="950" y="-8" text-anchor="middle" class="msg-label" fill="#7c2d12">parsed msg object</text>
+    <text x="950" y="14" text-anchor="middle" class="activation-label" fill="#7c2d12">handed off in-process — still inside Mirth's JVM</text>
+  </g>
+
+  <!-- Step 3: JS transformer runs -->
+  <g transform="translate(0,500)">
+    <rect x="1180" y="0" width="20" height="140" class="activation-bridge"/>
+    <circle cx="1020" cy="20" r="14" fill="#d97706"/>
+    <text x="1020" y="25" text-anchor="middle" class="step-num">3</text>
+    <text x="1042" y="20" class="msg-label">Source transformer · JavaScript</text>
+    <text x="1042" y="42" class="msg-mono">channelMap.put('PATIENT_MRN', msg['PID']['PID.3']['PID.3.1'].toString());</text>
+    <text x="1042" y="60" class="msg-mono">channelMap.put('LAST_NAME',   msg['PID']['PID.5']['PID.5.1'].toString());</text>
+    <text x="1042" y="78" class="msg-mono">channelMap.put('DOB_FHIR',    '19850412' → '1985-04-12');</text>
+    <text x="1042" y="96" class="msg-mono">channelMap.put('FHIR_GENDER', 'M' → 'male');</text>
+    <text x="1042" y="118" class="activation-label">normalizes v2 shapes into the things FHIR expects.</text>
+  </g>
+
+  <!-- Step 4: HTTP Sender expands templates -->
+  <g transform="translate(0,660)">
+    <circle cx="1020" cy="20" r="14" fill="#d97706"/>
+    <text x="1020" y="25" text-anchor="middle" class="step-num">4</text>
+    <text x="1042" y="20" class="msg-label">HTTP Sender · template expansion</text>
+    <text x="1042" y="42" class="msg-mono">URL    → /fhir/Patient?identifier=http%3A%2F%2F…%2Fmrn%7CMRN-1001</text>
+    <text x="1042" y="60" class="msg-mono">Body   → {"resourceType":"Patient","identifier":[…],"name":[…], …}</text>
+    <text x="1042" y="82" class="activation-label">Note: pipes, colons, slashes in the query value are URL-encoded.</text>
+  </g>
+
+  <!-- Arrow 4 → 5: PUT to HAPI -->
+  <g transform="translate(0,770)">
+    <line x1="1200" y1="0" x2="1630" y2="0" stroke="#047857" stroke-width="2.5" marker-end="url(#aGreen)"/>
+    <text x="1415" y="-8" text-anchor="middle" class="msg-label" fill="#064e3b">PUT /fhir/Patient?identifier=…</text>
+    <text x="1415" y="14" text-anchor="middle" class="activation-label" fill="#064e3b">HTTPS via host.docker.internal — leaves the Mirth container, re-enters HAPI via host</text>
+  </g>
+
+  <!-- Step 5: HAPI processes request -->
+  <g transform="translate(0,800)">
+    <rect x="1620" y="0" width="20" height="160" class="activation-fhir"/>
+    <circle cx="1520" cy="20" r="14" fill="#047857"/>
+    <text x="1520" y="25" text-anchor="middle" class="step-num">5</text>
+    <text x="1450" y="40" class="msg-label">Search by identifier</text>
+    <text x="1450" y="60" class="activation-label">SQL against the Patient.identifier</text>
+    <text x="1450" y="76" class="activation-label">index in H2 → returns 0 matches</text>
+    <text x="1450" y="92" class="activation-label">(first send) or 1 match (resend).</text>
+    <text x="1450" y="116" class="msg-label">Create or update</text>
+    <text x="1450" y="136" class="activation-label">0 matches → INSERT new Patient.</text>
+    <text x="1450" y="152" class="activation-label">1 match  → UPDATE, bump version.</text>
+  </g>
+
+  <!-- Arrow 5 → 4: response -->
+  <g transform="translate(0,990)">
+    <line x1="1630" y1="0" x2="1200" y2="0" stroke="#047857" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#aGreen)"/>
+    <text x="1415" y="-8" text-anchor="middle" class="msg-label" fill="#064e3b">201 Created  ·  Location: /Patient/42/_history/1</text>
+    <text x="1415" y="14" text-anchor="middle" class="activation-label" fill="#064e3b">(or 200 OK on a resend — same socket, no duplicate)</text>
+  </g>
+
+  <!-- Step 6: Mirth auto-ACKs -->
+  <g transform="translate(0,1020)">
+    <rect x="1180" y="0" width="20" height="40" class="activation-bridge"/>
+    <circle cx="1020" cy="20" r="14" fill="#d97706"/>
+    <text x="1020" y="25" text-anchor="middle" class="step-num">6</text>
+    <text x="1042" y="20" class="msg-label">Build ACK</text>
+    <text x="1042" y="40" class="activation-label">Mirth defaults to AA the moment the channel accepted the message. Response transformer can downgrade to AE.</text>
+  </g>
+
+  <!-- Arrow 6 → 2 (back to listener) -->
+  <g transform="translate(0,1080)">
+    <line x1="1180" y1="0" x2="710" y2="0" stroke="#c2410c" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#aOrange)"/>
+    <text x="950" y="-8" text-anchor="middle" class="msg-label" fill="#7c2d12">internal: ACK ready to send</text>
+  </g>
+
+  <!-- Arrow 2 → 1: ACK on same socket -->
+  <g transform="translate(0,1130)">
+    <line x1="690" y1="0" x2="250" y2="0" stroke="#c2410c" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#aOrange)"/>
+    <text x="475" y="-8" text-anchor="middle" class="msg-label" fill="#7c2d12">TCP : \x0b MSH|… |ACK|…|AA| · MSA|AA|MSG… \x1c\x0d</text>
+    <text x="475" y="14" text-anchor="middle" class="activation-label" fill="#7c2d12">same socket — sender.py reads it before closing the connection</text>
+  </g>
+
+  <!-- Step 7: sender prints -->
+  <g transform="translate(0,1165)">
+    <rect x="230" y="0" width="20" height="30" class="activation-host"/>
+    <circle cx="80" cy="15" r="14" fill="#475569"/>
+    <text x="80" y="20" text-anchor="middle" class="step-num">7</text>
+    <text x="100" y="20" class="msg-label">sender.py prints the ACK and exits.</text>
+  </g>
+
+  <!-- ─── Footer notes ─── -->
+  <g transform="translate(60,1230)">
+    <text x="0" y="0" class="h3">Where each thing can go wrong</text>
+  </g>
+  <g transform="translate(60,1250)">
+    <g transform="translate(0,0)">
+      <rect width="340" height="80" rx="8" class="footer-card"/>
+      <text x="14" y="24" font-size="14" font-weight="700" fill="#7c2d12">At step 1–2 — never arrives</text>
+      <text x="14" y="46" class="body">Missing MLLP framing, wrong port,</text>
+      <text x="14" y="64" class="body">channel not deployed → no Mirth log.</text>
+    </g>
+    <g transform="translate(360,0)">
+      <rect width="340" height="80" rx="8" class="footer-card"/>
+      <text x="14" y="24" font-size="14" font-weight="700" fill="#92400e">At step 3 — transformer throws</text>
+      <text x="14" y="46" class="body">Missing PID field or wrong path →</text>
+      <text x="14" y="64" class="body">Message Browser · Errors tab.</text>
+    </g>
+    <g transform="translate(720,0)">
+      <rect width="340" height="80" rx="8" class="footer-card"/>
+      <text x="14" y="24" font-size="14" font-weight="700" fill="#92400e">At step 4 — bad URL</text>
+      <text x="14" y="46" class="body">Unencoded | : / in query →</text>
+      <text x="14" y="64" class="body">URISyntaxException at send time.</text>
+    </g>
+    <g transform="translate(1080,0)">
+      <rect width="340" height="80" rx="8" class="footer-card"/>
+      <text x="14" y="24" font-size="14" font-weight="700" fill="#064e3b">At step 5 — HAPI rejects</text>
+      <text x="14" y="46" class="body">Bad gender code, empty required field →</text>
+      <text x="14" y="64" class="body">422 + OperationOutcome body.</text>
+    </g>
+    <g transform="translate(1440,0)">
+      <rect width="320" height="80" rx="8" class="footer-card"/>
+      <text x="14" y="24" font-size="14" font-weight="700" fill="#7c2d12">At step 6 — false success</text>
+      <text x="14" y="46" class="body">AA returned despite HAPI 4xx →</text>
+      <text x="14" y="64" class="body">add a response transformer.</text>
+    </g>
+  </g>
+</svg>
