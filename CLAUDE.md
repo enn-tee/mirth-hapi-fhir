@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A self-contained learning testbed for troubleshooting HL7 v2 ↔ FHIR integrations. Not a library, not a product — a reproducible local pipeline plus a long-form setup guide. `SETUP.md` is the primary artifact; everything else (compose file, Python scripts, exported channel XML) exists to support it.
+A self-contained learning testbed for troubleshooting HL7 v2 ↔ FHIR integrations. Not a library, not a product — a reproducible local pipeline plus a long-form setup guide. `SETUP.md` is the primary artifact (the long-form tutorial); `README.md` is the quick reference with a mermaid system diagram and CLI cheatsheet; everything else (compose file, Python scripts, exported channel XML) exists to support those two.
 
 Pipeline shape:
 
 ```
-sender.py / generate.py ── MLLP/TCP 6661 ──► Mirth (container) ── HTTPS 4005 ──► HAPI FHIR (container)
+scripts/hl7.py ── MLLP/TCP 6661 ──► Mirth (container) ── HTTPS 4005 ──► HAPI FHIR (container)
 ```
 
 If you're being asked to change behavior, default to assuming the user wants the **walkthrough in SETUP.md** to remain accurate. Updates to the channel JS, the destination template, or the senders almost always need a parallel edit to SETUP.md.
@@ -49,21 +49,31 @@ curl -s http://localhost:4005/fhir/metadata | python3 -c "import json,sys; d=jso
 # Wait for Mirth REST API readiness (30–90s cold start)
 until curl -k -s -o /dev/null -w '%{http_code}\n' https://localhost:4443/api/users/_login | grep -q 200; do sleep 2; done
 
-# Send the canonical sample message
-python3 sender.py
-python3 sender.py 127.0.0.1 6662   # override host/port
+# First-time setup (only third-party dep is faker)
+pip install -r requirements.txt
 
-# Scenario generator (14 named failure modes across baseline/bad-data/structure/transport)
-python3 generate.py list
-python3 generate.py send admit
-python3 generate.py send-all --delay 0.5
+# CLI discoverability
+python3 scripts/hl7.py                   # prints help
+python3 scripts/hl7.py list              # show message-types, patient sources, error overlays
+
+# Canonical sample message (ADT^A01, John Doe)
+python3 scripts/hl7.py send
+
+# Composable axes: message-type × patient × error
+python3 scripts/hl7.py send --random                                # faker patient, default ADT^A01
+python3 scripts/hl7.py send --error bad-date                        # apply error overlay
+python3 scripts/hl7.py send --random --locale de_DE --error pipe-in-name --message-type adt-a08
+python3 scripts/hl7.py send-all --delay 0.5                         # one of every error overlay
+
+# Override transport
+python3 scripts/hl7.py send --host 127.0.0.1 --port 6662
 
 # Read back from HAPI
 curl -s 'http://localhost:4005/fhir/Patient?family=Doe' | python3 -m json.tool
 curl -s 'http://localhost:4005/fhir/Patient?identifier=http://test-facility.example.org/mrn|MRN-1001' | python3 -c "import json,sys; print('count:', json.load(sys.stdin)['total'])"
 ```
 
-No build, no lint, no test suite — Python scripts use stdlib only (`socket`, `argparse`, `datetime`). Don't add a `requirements.txt` or third-party HL7 library; the hand-rolled MLLP framing is pedagogically intentional.
+No build, no lint, no test suite. The only third-party dependency is **Faker** (used by `random_patient()` to generate fake demographics). Don't add an HL7-parsing library — the hand-rolled MLLP framing and segment construction in `scripts/hl7.py` are pedagogically intentional.
 
 ## Port map (memorize this — most "it doesn't work" issues map back here)
 
@@ -76,11 +86,17 @@ No build, no lint, no test suite — Python scripts use stdlib only (`socket`, `
 
 The write path's last leg goes Mirth → `host.docker.internal:4005` → host → HAPI. It does **not** use a shared Docker network; that's deliberate.
 
-## Editing the senders
+## Editing `scripts/hl7.py`
 
-`sender.py` and `generate.py` build HL7 v2 messages by string concatenation. The "patient block" at the top of `sender.py` (MRN, name, DOB, gender, address) is the editable surface; everything else is segment/framing scaffolding. Field separators (`|`, `^`, `&`) and MLLP framing bytes (`\x0b`, `\x1c`, `\x0d`) are load-bearing — don't replace them with helpers without updating SETUP.md's "what MLLP actually is" sections.
+The CLI is structured top-down in one file: framing constants → `Patient` dataclass → `canonical_patient()` / `random_patient()` → message-type builders (`build_adt_a01`, …) → error overlays + `ERRORS` registry → `build_framed_message()` compose → `send_to_mirth()` → argparse wiring. Field separators (`|`, `^`, `&`) and MLLP framing bytes (`\x0b`, `\x1c`, `\x0d`) are load-bearing — don't replace them with helpers without updating SETUP.md's "what MLLP actually is" sections.
 
-When adding a new scenario to `generate.py`, register it in the `SCENARIOS` list with `(key, group, expected_behavior, fn)`. Groups currently in use: `baseline`, `bad-data`, `structure`, `transport`. The `expected` string surfaces in `list` output and should describe what a learner should observe in the Mirth Message Browser — not just "this fails."
+Three orthogonal axes, all composable: `--message-type` × `--patient` × `--error`. Every combination must run without raising — overlays that target a missing field should no-op rather than throw.
+
+**Adding a new error overlay**: append to the `ERRORS` registry construction with `ErrorOverlay(name, group, description, apply_fn, stage="message")`. Groups in use: `bad-data`, `structure`, `transport`. Stage is `"message"` (list of segments in/out), `"serialize"` (separator string in/out — `wrong-line-endings`), or `"frame"` (framed bytes in/out — `no-mllp-frame`). The `description` string surfaces in `list` output and during `send-all` — write it so a learner can predict what they'll see in the Message Browser, not just "this fails."
+
+**Adding a new message type**: add a `build_<type>(patient: Patient) -> list` function and register it in `MESSAGE_TYPES`. Reuse `_msh()` and `_pid()` helpers to stay consistent.
+
+**Refining `random_patient()`**: search for the `DESIGN-CHOICE:` comment — the current Faker field choices (MRN format, DOB range, locale handling) are documented with alternatives so you can swap shapes without re-reading the whole function.
 
 ## Editing the Mirth channel logic
 
@@ -90,13 +106,14 @@ The source transformer uses E4X-style access (`msg['PID']['PID.3']['PID.3.1']`).
 
 ## Documentation discipline
 
-`SETUP.md` is the deliverable. When editing it:
+`SETUP.md` is the deliverable. `README.md` is the GitHub-facing entry point. When editing either:
 
-- The troubleshooting table is the most-used section — every entry should encode a real failure that was actually hit, with the actual fix, not generic advice.
-- Code blocks in SETUP.md should be runnable as-is on macOS. Linux variations (e.g. `sed -i` without the `''`) are noted inline rather than duplicating the whole block.
+- The troubleshooting table in SETUP.md is the most-used section — every entry should encode a real failure that was actually hit, with the actual fix, not generic advice.
+- Code blocks should be runnable as-is on macOS. Linux variations (e.g. `sed -i` without the `''`) are noted inline rather than duplicating the whole block.
 - Don't hard-wrap markdown prose paragraphs — long lines render fine and survive copy-paste into GitHub/Notion.
+- README.md has a mermaid diagram (`flowchart LR` with nested `direction TB` subgraphs); GitHub's mermaid renderer handles it. Validate with the Mermaid Chart MCP tool before committing changes to it.
 
-`diagrams/` holds hand-authored SVGs referenced by SETUP.md. They're not generated from any source — edit the SVG directly if a diagram needs to change.
+`diagrams/` holds hand-authored SVGs referenced by SETUP.md. They're not generated from any source — edit the SVG directly if a diagram needs to change. The mermaid diagram in README.md is the only renderer-generated diagram in this repo; the SVGs and mermaid coexist on purpose (SVGs are bigger and more detailed; mermaid is the inline cheatsheet view).
 
 ## Scope expectations for this repo
 

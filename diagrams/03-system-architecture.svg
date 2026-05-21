@@ -45,10 +45,10 @@
   <text x="80" y="160" class="h-zone">Your Mac · host machine</text>
 
   <!-- Host tools row -->
-  <!-- sender.py -->
+  <!-- hl7.py -->
   <g transform="translate(100,200)">
     <rect width="320" height="170" rx="10" class="host-tool"/>
-    <text x="20" y="34" class="tool-title">sender.py</text>
+    <text x="20" y="34" class="tool-title">hl7.py</text>
     <text x="20" y="56" class="tool-sub">Python script (you run it)</text>
     <line x1="20" y1="68" x2="300" y2="68" stroke="#e2e8f0"/>
     <text x="20" y="92" class="tool-body">Builds one ADT^A01 message,</text>
@@ -120,7 +120,7 @@
       <rect width="580" height="76" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5" stroke-dasharray="4,3"/>
       <text x="14" y="24" font-size="15" font-weight="700" fill="#7c2d12">⓪ ACK builder  (automatic)</text>
       <text x="14" y="46" font-size="13" fill="#334155">Mirth generates an MSH|…|ACK + MSA|AA|… reply,</text>
-      <text x="14" y="64" font-size="13" fill="#334155">sends it back over the still-open TCP socket to sender.py.</text>
+      <text x="14" y="64" font-size="13" fill="#334155">sends it back over the still-open TCP socket to hl7.py.</text>
     </g>
   </g>
 
@@ -161,7 +161,7 @@
 
   <!-- ─── ARROWS / PORT MAPPINGS ─── -->
 
-  <!-- ① sender.py → Mirth :6661 (MLLP) -->
+  <!-- ① hl7.py → Mirth :6661 (MLLP) -->
   <g>
     <path d="M260,370 L260,560" stroke="#c2410c" stroke-width="3" fill="none" marker-end="url(#aV2)"/>
     <rect x="160" y="420" width="240" height="64" rx="6" fill="#fff7ed" stroke="#c2410c"/>
@@ -170,7 +170,7 @@
     <text x="280" y="478" text-anchor="middle" class="arrow-sub">raw TCP socket</text>
   </g>
 
-  <!-- ⓪ ACK from Mirth → sender.py (dashed, same socket) -->
+  <!-- ⓪ ACK from Mirth → hl7.py (dashed, same socket) -->
   <g>
     <path d="M210,560 L210,370" stroke="#ea580c" stroke-width="2.5" stroke-dasharray="6,4" fill="none" marker-end="url(#aV2dash)"/>
     <text x="120" y="450" class="arrow-sub" fill="#9a3412">⓪ ACK back</text>

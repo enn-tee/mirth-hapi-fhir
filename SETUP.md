@@ -8,14 +8,13 @@ A reproducible setup for learning how to troubleshoot HL7 v2 to FHIR integration
 |---|---|---|---|
 | HAPI FHIR server | `hapiproject/hapi:latest` | `4005 → 8080` | Destination FHIR R4 server (clean, empty) |
 | Mirth Connect | `nextgenhealthcare/connect:latest` | `4443 → 8443` (admin HTTPS), `4006 → 8080` (admin HTTP), `6661 → 6661` (MLLP listener) | Integration engine — receives v2 over MLLP, converts to FHIR, POSTs to HAPI |
-| `sender.py` (host) | — | — | Python MLLP client that sends one sample `ADT^A01` message |
-| `generate.py` (host) | — | — | Scenario generator: 14 named messages across baseline/bad-data/structure/transport groups for troubleshooting practice |
+| `scripts/hl7.py` (host) | — | — | Python MLLP CLI: composable `send` / `send-all` / `list` with `--message-type`, `--patient`, `--error` axes. Uses [Faker](https://faker.readthedocs.io/) for random patients. |
 | Mirth admin GUI (Java Swing) | Launched on host via the **Mirth Connect Administrator Launcher** (native install4j app from NextGen), with OpenWebStart as a fallback | — | Where you build channels, inspect messages, debug failures |
 
 Data flow:
 
 ```
-sender.py ── MLLP (port 6661) ──► Mirth channel ── HTTPS (port 4005) ──► HAPI FHIR
+hl7.py ── MLLP (port 6661) ──► Mirth channel ── HTTPS (port 4005) ──► HAPI FHIR
                                       │
                                       └─► Source transformer (JS): parse PID, normalize dates/gender
                                           Destination (HTTP Sender): PUT Patient?identifier=…
@@ -27,9 +26,9 @@ sender.py ── MLLP (port 6661) ──► Mirth channel ── HTTPS (port 400
                               YOUR MAC (host)
    ┌──────────────────────────────────────────────────────────────────────────────┐
    │                                                                              │
-   │    $ python3 sender.py                                $ curl '...'           │
+   │    $ python3 scripts/hl7.py send                      $ curl '...'           │
    │    ┌─────────────────────┐                            ┌─────────────────┐    │
-   │    │     sender.py       │                            │      curl       │    │
+   │    │   scripts/hl7.py    │                            │      curl       │    │
    │    │  builds HL7 v2 +    │                            │  HTTP client    │    │
    │    │  MLLP framing       │                            │                 │    │
    │    └──────────┬──────────┘                            └────────┬────────┘    │
@@ -62,7 +61,7 @@ sender.py ── MLLP (port 6661) ──► Mirth channel ── HTTPS (port 400
    │   │  return over TCP socket         │         │                          │   │
    │   └─────────────────┬───────────────┘         └─────────────┬────────────┘   │
    │                     │                                       │                │
-   │            ⓪ ACK back to sender.py            ⑨ Bundle JSON to curl          │
+   │            ⓪ ACK back to hl7.py               ⑨ Bundle JSON to curl          │
    │                     │                                       │                │
    │              MSH|…|ACK|…|AA|             {"resourceType":"Bundle","total":1, │
    │              MSA|AA|MSG…                   "entry":[{"resource":{...}}]}     │
@@ -70,14 +69,14 @@ sender.py ── MLLP (port 6661) ──► Mirth channel ── HTTPS (port 400
    └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Write path** (`python3 sender.py`):
-1. `sender.py` builds an `ADT^A01` HL7 v2 message, wraps it in MLLP framing bytes (`\x0b … \x1c\x0d`), opens a TCP socket to `localhost:6661`.
+**Write path** (`python3 scripts/hl7.py send`):
+1. `hl7.py` builds an `ADT^A01` HL7 v2 message, wraps it in MLLP framing bytes (`\x0b … \x1c\x0d`), opens a TCP socket to `localhost:6661`.
 2. Mirth's TCP Listener strips the framing, parses the v2 message into a navigable `msg` object.
 3. Source Transformer (JS) extracts PID fields, normalizes them (`YYYYMMDD` → `YYYY-MM-DD`, `M` → `male`), stashes them in `channelMap`.
 4. HTTP Sender expands `${PATIENT_MRN}` etc. in the URL and JSON body templates.
 5. Mirth issues `PUT http://host.docker.internal:4005/fhir/Patient?identifier=…` — leaves Docker via the host gateway and re-enters via the HAPI port mapping.
 6. HAPI runs a FHIR conditional update: search for a Patient with that identifier, update if found / create if not, persist to H2.
-7. (ACK return) Mirth auto-generates an HL7 v2 ACK (`MSH|…|ACK|…|AA|` + `MSA|AA|…`), returns it over the still-open TCP socket. `sender.py` prints it.
+7. (ACK return) Mirth auto-generates an HL7 v2 ACK (`MSH|…|ACK|…|AA|` + `MSA|AA|…`), returns it over the still-open TCP socket. `hl7.py` prints it.
 
 **Read path** (`curl '…?family=Doe'`):
 1. `curl` sends `GET /fhir/Patient?family=Doe` to `localhost:4005`, mapped to HAPI's port `8080` inside the container.
@@ -94,7 +93,7 @@ sender.py ── MLLP (port 6661) ──► Mirth channel ── HTTPS (port 400
 - **macOS** (steps for the Mirth admin client are Mac-specific; the Docker side is platform-agnostic)
 - **Docker Desktop** running
 - **Homebrew**
-- **Python 3.8+** (used only by `sender.py`)
+- **Python 3.8+** with [Faker](https://faker.readthedocs.io/) installed (the only third-party dep): `pip install -r requirements.txt`. Faker is used by `scripts/hl7.py` to generate fake patient details when you pass `--random`. The rest of the script is stdlib-only.
 - A web browser, but **only briefly** — and not your normal one if it has cookies for `localhost`. Either use a fresh browser, an incognito window, or skip the browser entirely with the curl approach below.
 
 ### Docker Desktop sizing
@@ -372,84 +371,59 @@ The `${VAR}` placeholders are Mirth's template-replacement syntax; they pull val
 
 The MLLP listener on port 6661 is now active.
 
-## Step 7 — Create the HL7 v2 sender
+## Step 7 — The HL7 v2 sender CLI
 
-Save this as `sender.py` in your project directory:
+The repo ships `scripts/hl7.py` — a single CLI that supersedes the older `sender.py` and `generate.py`. It composes three orthogonal axes:
+
+| Axis | Flag | Values |
+|---|---|---|
+| Message type | `--message-type` (default `adt-a01`) | `adt-a01`, `adt-a03`, `adt-a08`, `oru-r01` |
+| Patient source | `--patient` (default `canonical`) | `canonical` (fixed John Doe), `random` (Faker-generated; use `--locale` to vary names/addresses) |
+| Error overlay | `--error` (default none) | 9 registered overlays in three groups: `bad-data`, `structure`, `transport` |
+
+The only piece of v2 framing the script actually depends on is three magic bytes:
 
 ```python
-#!/usr/bin/env python3
-"""Send a sample HL7 v2 ADT^A01 (patient admission) message over MLLP."""
-import socket
-import sys
-from datetime import datetime
-
-SB = b"\x0b"   # MLLP start block
-EB = b"\x1c"   # MLLP end block
+SB = b"\x0b"   # MLLP start block (vertical tab)
+EB = b"\x1c"   # MLLP end block (file separator)
 CR = b"\x0d"   # carriage return
+# every framed message on the wire is exactly:  SB + body + EB + CR
+```
 
-# --- Patient fields you can edit to test different inputs ---
-PATIENT_MRN   = "MRN-1001"
-LAST_NAME     = "Doe"
-FIRST_NAME    = "John"
-DOB           = "19850412"
-GENDER        = "M"
-ADDRESS_LINE  = "123 Main St"
-ADDRESS_CITY  = "Atlanta"
-ADDRESS_STATE = "GA"
-ADDRESS_ZIP   = "30301"
-# -----------------------------------------------------------
+Everything else (segments, fields, identifiers, the FHIR conditional-update URL pattern) is built from string concatenation in `scripts/hl7.py`. Read the file once; it's ~350 lines and structured top-down (Patient → message builders → error overlays → CLI). Discover the CLI with:
 
-now = datetime.now().strftime("%Y%m%d%H%M%S")
-msg_ctrl_id = f"MSG{now}"
-
-segments = [
-    f"MSH|^~\\&|SENDER|TEST_FACILITY|MIRTH|TEST_FACILITY|{now}||ADT^A01|{msg_ctrl_id}|P|2.5",
-    f"EVN|A01|{now}",
-    f"PID|1||{PATIENT_MRN}^^^TEST_FACILITY^MR||{LAST_NAME}^{FIRST_NAME}||{DOB}|{GENDER}|||"
-    f"{ADDRESS_LINE}^^{ADDRESS_CITY}^{ADDRESS_STATE}^{ADDRESS_ZIP}",
-    f"PV1|1|I|WARD^101^A|||||||MED",
-]
-hl7 = "\r".join(segments) + "\r"
-
-host = sys.argv[1] if len(sys.argv) > 1 else "localhost"
-port = int(sys.argv[2]) if len(sys.argv) > 2 else 6661
-
-print(f"--- Sending to {host}:{port} ---")
-print(hl7.replace("\r", "\n"))
-
-with socket.create_connection((host, port), timeout=10) as s:
-    s.sendall(SB + hl7.encode("utf-8") + EB + CR)
-    buf = b""
-    while EB not in buf:
-        chunk = s.recv(4096)
-        if not chunk:
-            break
-        buf += chunk
-
-ack = buf.translate(None, SB + EB + CR).decode("utf-8", errors="replace")
-print("--- ACK from receiver ---")
-print(ack or "(empty — likely framing or connection problem)")
+```
+python3 scripts/hl7.py            # prints help
+python3 scripts/hl7.py list       # shows every message-type, patient source, and error overlay with one-line teaching descriptions
 ```
 
 ## Step 8 — Run the pipeline
 
 ```
-python3 sender.py
+python3 scripts/hl7.py send
 ```
 
 You should see the sent message followed by an `MSH|…|ACK|…|AA|…` ACK from Mirth. Then verify the FHIR Patient landed in HAPI:
 
-### Step 8b (optional) — Run the failure-mode generator
+### Step 8b (optional) — Exercise the failure modes
 
-`generate.py` (also in this repo) ships ~14 named scenarios across four groups: `baseline`, `bad-data`, `structure`, `transport`. Use it to populate Mirth's Message Browser with real examples of every common integration failure mode.
+Each `--error` overlay corresponds to a real-world integration bug. Apply one to any base message and watch where the failure surfaces:
 
 ```
-python3 generate.py list                # show all scenarios
-python3 generate.py send admit          # send one
-python3 generate.py send-all            # send everything (~7 seconds)
+python3 scripts/hl7.py send --error bad-date            # AA from Mirth, but birthDate is empty in HAPI (silent corruption)
+python3 scripts/hl7.py send --error missing-mrn         # destination 4xx — empty identifier in the FHIR URL
+python3 scripts/hl7.py send --error no-pid              # transformer throws — see Errors tab
+python3 scripts/hl7.py send --error no-mllp-frame       # no ACK at all — Mirth doesn't even see the message
+python3 scripts/hl7.py send --random --error pipe-in-name --message-type adt-a08  # composability: random patient, update event, name-corruption overlay
 ```
 
-After `send-all`, expect roughly the following pattern: Mirth ACKs every scenario `AA` (regardless of downstream behavior); 2 scenarios fail at the destination (`no-pid`, `missing-mrn`); 1 scenario never reaches Mirth at all (`no-mllp-frame`); the remaining 11 land in HAPI — several with intentionally corrupt data. The educational value is in opening each message in the Mirth Message Browser and seeing where the failure surfaced (or didn't). The "silent corruption" cases — where Mirth says `AA` and HAPI happily stores nonsense — are the most important to recognize.
+To populate Mirth's Message Browser with one example of each failure mode in a single pass:
+
+```
+python3 scripts/hl7.py send-all            # 9 overlays, default ~0.5s spacing
+```
+
+Expect roughly: Mirth ACKs every scenario `AA` (regardless of what HAPI does downstream); `missing-mrn` and `no-pid` fail at the destination; `no-mllp-frame` never reaches Mirth (no ACK); the remaining overlays land in HAPI with intentionally corrupt data. The educational value is in opening each message in the Message Browser and seeing **where** the failure surfaced — or didn't. The "silent corruption" cases (Mirth says `AA`, HAPI happily stores nonsense) are the most important to recognize, because in production they're the ones nobody notices for weeks.
 
 ```
 curl -s 'http://localhost:4005/fhir/Patient?family=Doe' | python3 -m json.tool
@@ -472,8 +446,9 @@ The count should stay at `1` no matter how many times you resend.
 | HAPI: `HTTP 400 Bad Request` only from browser, fine from `curl` | Browser cookies for `localhost` share across all ports; combined cookie payload exceeds Tomcat's default 8 KB header limit. | `SERVER_MAX_HTTP_REQUEST_HEADER_SIZE=65536` env var on the HAPI container (already in Step 1). |
 | Mirth: `HTTP 431 Request Header Fields Too Large` from browser at `https://localhost:4443/` | Same cookie problem; Jetty returns the proper 431. Mirth doesn't expose a config knob for Jetty's header limit. | Bypass the browser. `curl` the JNLP (Step 4), launch via OpenWebStart (Step 5). Java's HTTP stack uses its own empty cookie store. |
 | Mirth admin "cannot reach server at localhost:8443" | JNLP embeds the server's *internal* port. Mirth has no concept of port mapping. | `sed` the `<argument>` line from `:8443` to `:4443` (Step 4). |
-| `sender.py`: connection refused | Channel not deployed, or Mirth not running. | Check Dashboard — channel state should be green/Started. Redeploy if needed. |
-| `sender.py`: sends, no ACK, no Patient in HAPI | Transformer threw, or destination request failed. | In Mirth admin → Dashboard → right-click channel → **View Messages**. Open the failed message; the Errors tab shows the JS stack trace; the Destinations tab shows the HTTP response code from HAPI. |
+| `scripts/hl7.py send`: connection refused | Channel not deployed, or Mirth not running. | Check Dashboard — channel state should be green/Started. Redeploy if needed. |
+| `scripts/hl7.py send`: sends, no ACK, no Patient in HAPI | Transformer threw, or destination request failed. | In Mirth admin → Dashboard → right-click channel → **View Messages**. Open the failed message; the Errors tab shows the JS stack trace; the Destinations tab shows the HTTP response code from HAPI. |
+| `scripts/hl7.py`: `error: the faker library is required.` | Faker isn't installed in the current Python environment. | `pip install -r requirements.txt`. Faker is the only third-party dep — the rest is stdlib. |
 | FHIR returns 422 Unprocessable Entity | Resource didn't validate (e.g., empty `birthDate` with a profile constraint, bad gender code). | Look at the `OperationOutcome` body in the Mirth destination response. Adjust the transformer to coerce or omit the offending field. |
 | Wrong field values land in HAPI | Transformer mis-mapped a PID component. | Same Message Browser → **Mappings** tab. Compare `channelMap` values against what you sent. |
 | HAPI Patient lands with all fields empty (no name, no DOB, etc.) | Channel deployed without the source transformer — the destination's `${PATIENT_MRN}` etc. expanded to empty strings. | Edit the channel, add the JavaScript transformer (Step 6c), save, redeploy. Confirm via Message Browser → Mappings tab — populated `channelMap` is the success signal. |

@@ -37,13 +37,13 @@
 
   <!-- Title -->
   <text x="60" y="64" class="title">Lifecycle of one ADT^A01 message</text>
-  <text x="60" y="94" class="subtitle">Sequence diagram tracing a single patient admission from <tspan font-family="SF Mono,Menlo,monospace">sender.py</tspan> all the way to the H2 database in HAPI, and the ACK on the return trip.</text>
+  <text x="60" y="94" class="subtitle">Sequence diagram tracing a single patient admission from <tspan font-family="SF Mono,Menlo,monospace">hl7.py</tspan> all the way to the H2 database in HAPI, and the ACK on the return trip.</text>
 
   <!-- ─── Lane headers ─── -->
-  <!-- sender.py -->
+  <!-- hl7.py -->
   <g>
     <rect x="100" y="150" width="280" height="64" rx="8" class="lane-host"/>
-    <text x="240" y="180" text-anchor="middle" class="lane-title">sender.py</text>
+    <text x="240" y="180" text-anchor="middle" class="lane-title">hl7.py</text>
     <text x="240" y="202" text-anchor="middle" class="lane-sub">Python script · on the host</text>
     <line x1="240" y1="214" x2="240" y2="1200" class="lifeline"/>
   </g>
@@ -72,13 +72,13 @@
     <line x1="1630" y1="214" x2="1630" y2="1200" class="lifeline"/>
   </g>
 
-  <!-- ─── Step 1: sender.py builds + opens socket ─── -->
+  <!-- ─── Step 1: hl7.py builds + opens socket ─── -->
   <g transform="translate(0,250)">
     <rect x="230" y="0" width="20" height="60" class="activation-host"/>
     <circle cx="80" cy="20" r="14" fill="#475569"/>
     <text x="80" y="25" text-anchor="middle" class="step-num">1</text>
     <text x="100" y="20" class="msg-label">Build message, wrap in MLLP, open TCP</text>
-    <text x="100" y="40" class="activation-label">sender.py runs locally — no network yet</text>
+    <text x="100" y="40" class="activation-label">hl7.py runs locally — no network yet</text>
   </g>
 
   <!-- Arrow 1 → 2: TCP send -->
@@ -175,7 +175,7 @@
   <g transform="translate(0,1130)">
     <line x1="690" y1="0" x2="250" y2="0" stroke="#c2410c" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#aOrange)"/>
     <text x="475" y="-8" text-anchor="middle" class="msg-label" fill="#7c2d12">TCP : \x0b MSH|… |ACK|…|AA| · MSA|AA|MSG… \x1c\x0d</text>
-    <text x="475" y="14" text-anchor="middle" class="activation-label" fill="#7c2d12">same socket — sender.py reads it before closing the connection</text>
+    <text x="475" y="14" text-anchor="middle" class="activation-label" fill="#7c2d12">same socket — hl7.py reads it before closing the connection</text>
   </g>
 
   <!-- Step 7: sender prints -->
@@ -183,7 +183,7 @@
     <rect x="230" y="0" width="20" height="30" class="activation-host"/>
     <circle cx="80" cy="15" r="14" fill="#475569"/>
     <text x="80" y="20" text-anchor="middle" class="step-num">7</text>
-    <text x="100" y="20" class="msg-label">sender.py prints the ACK and exits.</text>
+    <text x="100" y="20" class="msg-label">hl7.py prints the ACK and exits.</text>
   </g>
 
   <!-- ─── Footer notes ─── -->
