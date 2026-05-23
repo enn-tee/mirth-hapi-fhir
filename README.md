@@ -65,6 +65,17 @@ You should see an `MSA|AA` ACK from Mirth. Verify the Patient landed in HAPI:
 curl -s 'http://localhost:4005/fhir/Patient?family=Doe' | python3 -m json.tool
 ```
 
+### Admin GUI (macOS, one-time)
+
+Building or importing the channel (step 3 above) needs the Mirth Connect Administrator GUI. Install NextGen's **native launcher** — direct download for Apple Silicon:
+
+```bash
+curl -L -o ~/Downloads/mirth-admin-launcher.dmg \
+  https://s3.us-east-1.amazonaws.com/downloads.mirthcorp.com/connect-client-launcher/mirth-administrator-launcher-latest-macos-aarch64.dmg
+```
+
+Mount it, drag the app into `/Applications`, then open `mirth-administrator.jnlp` with it (or add a connection to `https://localhost:4443/webstart` in the launcher). Intel build + full walkthrough: **[SETUP.md](SETUP.md) Steps 3–4**. Don't use OpenWebStart — it launches the client but fails to connect.
+
 ## CLI usage
 
 `scripts/hl7.py` composes **three orthogonal axes**. Every combination produces a defined byte stream.

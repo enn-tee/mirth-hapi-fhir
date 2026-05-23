@@ -9,7 +9,7 @@ A reproducible setup for learning how to troubleshoot HL7 v2 to FHIR integration
 | HAPI FHIR server | `hapiproject/hapi:latest` | `4005 → 8080` | Destination FHIR R4 server (clean, empty) |
 | Mirth Connect | `nextgenhealthcare/connect:latest` | `4443 → 8443` (admin HTTPS), `4006 → 8080` (admin HTTP), `6661 → 6661` (MLLP listener) | Integration engine — receives v2 over MLLP, converts to FHIR, POSTs to HAPI |
 | `scripts/hl7.py` (host) | — | — | Python MLLP CLI: composable `send` / `send-all` / `list` with `--message-type`, `--patient`, `--error` axes. Uses [Faker](https://faker.readthedocs.io/) for random patients. |
-| Mirth admin GUI (Java Swing) | Launched on host via the **Mirth Connect Administrator Launcher** (native install4j app from NextGen), with OpenWebStart as a fallback | — | Where you build channels, inspect messages, debug failures |
+| Mirth admin GUI (Java Swing) | Launched on host via the **Mirth Connect Administrator Launcher** (native install4j app from NextGen) | — | Where you build channels, inspect messages, debug failures |
 
 Data flow:
 
@@ -171,9 +171,15 @@ nc -z localhost 6661 && echo "MLLP port 6661 reachable"
 
 ## Step 3 — Install the Mirth Connect Administrator Launcher (one-time, Mac)
 
-Mirth's admin GUI is a Java Swing application originally delivered as a Java Web Start app. Apple removed Java Web Start from macOS years ago. NextGen now ships a native install4j-packaged launcher that bundles its own JRE *and* JavaFX — which is what the Message Browser's content panes rely on for syntax highlighting. **This is the recommended path** on Mac. (OpenWebStart still works, but its bundled Adoptium JRE doesn't include JavaFX, so the Message Browser content tabs render blank. See the "Alternative" section below if you need to go that route.)
+Mirth's admin GUI is a Java Swing application originally delivered as a Java Web Start app. Apple removed Java Web Start from macOS years ago. NextGen now ships a native install4j-packaged launcher that bundles its own JRE *and* JavaFX — which is what the Message Browser's content panes rely on for syntax highlighting. **This is the path this guide uses.** (Avoid the OpenWebStart Java Web Start launcher: on the machines this guide was built on it launched the client but then failed to connect to the server — and its bundled JRE lacks JavaFX, so the Message Browser content tabs render blank.)
 
-Download `mirth-administrator-launcher-latest-macos.dmg` from <https://www.nextgen.com/products-and-services/integration-engine> (or from NextGen's customer portal), mount it, drag **Mirth Connect Administrator Launcher.app** into `/Applications/`. Verify:
+The NextGen marketing page hides this behind a form; the direct, no-login source is the Mirth download archive. Check your CPU with `uname -m` and grab the matching build:
+
+- **Apple Silicon (`arm64`):** <https://s3.us-east-1.amazonaws.com/downloads.mirthcorp.com/connect-client-launcher/mirth-administrator-launcher-latest-macos-aarch64.dmg>
+- **Intel (`x86_64`):** <https://s3.us-east-1.amazonaws.com/downloads.mirthcorp.com/connect-client-launcher/mirth-administrator-launcher-latest-macos.dmg>
+- Older/specific versions: the [MCAL download archive](https://mirthdownloadarchive.s3.amazonaws.com/mcal-downloads.html).
+
+`latest` is currently 1.4.2 and bundles its own OpenJDK 17 — the runtime the 4.5.2 client needs. Downloading with `curl -L -o ~/Downloads/<file>.dmg <url>` instead of a browser avoids the Gatekeeper quarantine flag. Mount it, drag **Mirth Connect Administrator Launcher.app** into `/Applications/`. Verify:
 
 ```
 ls "/Applications/Mirth Connect Administrator Launcher.app"
@@ -190,6 +196,8 @@ Open the launcher from LaunchPad. It presents a "Connections" list on the left a
 
 Click **Save**, then **Launch**.
 
+Alternatively, skip the Connections UI: right-click the repo's `mirth-administrator.jnlp` in Finder → **Open With → Mirth Connect Administrator Launcher**, and choose **Change All** so double-clicking it works thereafter. The launcher reads the server URL from the file. Either route reaches the same client.
+
 What you should see, in order:
 
 1. A certificate warning (self-signed cert on `localhost`). Click **Allow** / **Trust**, optionally tick "always trust".
@@ -203,47 +211,9 @@ To verify heap is actually 2 GB, in another terminal:
 jps -lvm | grep -i mirth
 ```
 
-You should see `-Xmx2048m` (or `-Xmx2g`) in the args. The main class is `install4j.com.mirth.connect.client.launcher.ui.MirthWrapper com.mirth.connect.client.ui.Mirth …` — that's confirmation you're on the native launcher path, not OpenWebStart.
+You should see `-Xmx2048m` (or `-Xmx2g`) in the args. The main class is `install4j.com.mirth.connect.client.launcher.ui.MirthWrapper com.mirth.connect.client.ui.Mirth …` — that's confirmation you're on the native launcher path.
 
 If the launcher silently fails to appear, check System Settings → Privacy & Security for a Gatekeeper prompt waiting on you.
-
-### Alternative — OpenWebStart path (with caveats)
-
-If you can't install the native launcher (corporate restrictions, etc.), or you want to tune Swing rendering properties not exposed by the native launcher UI, you can fall back to OpenWebStart.
-
-```
-brew install --cask openwebstart
-open "/opt/homebrew/Caskroom/openwebstart/$(ls /opt/homebrew/Caskroom/openwebstart | grep -v metadata | head -1)/OpenWebStart Installer.app"
-```
-
-Then fetch the JNLP from Mirth (the browser route fails with `HTTP 431 Request Header Fields Too Large` due to accumulated `localhost` cookies — Mirth's Jetty doesn't expose a header-limit config knob, so we sidestep the browser):
-
-```
-cd /path/to/your/project
-curl -k -s -o mirth-administrator.jnlp https://localhost:4443/webstart.jnlp
-```
-
-**Critical patch:** Mirth's served JNLP embeds `<argument>https://localhost:8443</argument>` — the container-internal port. From the host, the server lives on `4443`. Fix it:
-
-```
-sed -i '' 's|<argument>https://localhost:8443</argument>|<argument>https://localhost:4443</argument>|' mirth-administrator.jnlp
-```
-
-(Linux: drop the `''` after `-i`.)
-
-Bump the heap ceiling in the JNLP — its default `max-heap-size="512m"` is too small:
-
-```
-sed -i '' 's|max-heap-size="512m"|initial-heap-size="512m" max-heap-size="2048m"|g' mirth-administrator.jnlp
-```
-
-Launch:
-
-```
-open -a "/Applications/OpenWebStart/OpenWebStart javaws.app" mirth-administrator.jnlp
-```
-
-**Known limitation:** OpenWebStart's bundled Adoptium JRE does not include JavaFX native libraries. The Mirth client's Message Browser uses JavaFX WebView to render message content panes (Raw / Processed Raw / Transformed / Encoded / Sent / Response). On the OpenWebStart path those tabs come up **blank**, with no error message. To use OpenWebStart and keep the Message Browser working, you need a JDK that bundles JavaFX (Liberica Full or Zulu+FX), then point OpenWebStart at it via **OpenWebStart Settings → JVM Manager**.
 
 ## Step 6 — Create the v2→FHIR channel
 
@@ -444,8 +414,8 @@ The count should stay at `1` no matter how many times you resend.
 | Symptom | Root cause | Fix |
 |---|---|---|
 | HAPI: `HTTP 400 Bad Request` only from browser, fine from `curl` | Browser cookies for `localhost` share across all ports; combined cookie payload exceeds Tomcat's default 8 KB header limit. | `SERVER_MAX_HTTP_REQUEST_HEADER_SIZE=65536` env var on the HAPI container (already in Step 1). |
-| Mirth: `HTTP 431 Request Header Fields Too Large` from browser at `https://localhost:4443/` | Same cookie problem; Jetty returns the proper 431. Mirth doesn't expose a config knob for Jetty's header limit. | Bypass the browser. `curl` the JNLP (Step 4), launch via OpenWebStart (Step 5). Java's HTTP stack uses its own empty cookie store. |
-| Mirth admin "cannot reach server at localhost:8443" | JNLP embeds the server's *internal* port. Mirth has no concept of port mapping. | `sed` the `<argument>` line from `:8443` to `:4443` (Step 4). |
+| Mirth: `HTTP 431 Request Header Fields Too Large` from browser at `https://localhost:4443/` | Same cookie problem; Jetty returns the proper 431. Mirth doesn't expose a config knob for Jetty's header limit. | Don't use a browser to launch the admin GUI — use the native launcher (Steps 3–4), which talks to the API directly with its own empty cookie store. (If you must open Mirth's web page, use a private window or clear `localhost` cookies first.) |
+| Mirth admin "cannot reach server at localhost:8443" | A JNLP fetched fresh from the server embeds the container-*internal* port `8443`; from the host the admin API is published on `4443`. The `mirth-administrator.jnlp` shipped in this repo already uses `4443`. | If you re-fetched the JNLP yourself, change its `<argument>` line from `https://localhost:8443` to `https://localhost:4443`. |
 | `scripts/hl7.py send`: connection refused | Channel not deployed, or Mirth not running. | Check Dashboard — channel state should be green/Started. Redeploy if needed. |
 | `scripts/hl7.py send`: sends, no ACK, no Patient in HAPI | Transformer threw, or destination request failed. | In Mirth admin → Dashboard → right-click channel → **View Messages**. Open the failed message; the Errors tab shows the JS stack trace; the Destinations tab shows the HTTP response code from HAPI. |
 | `scripts/hl7.py`: `error: the faker library is required.` | Faker isn't installed in the current Python environment. | `pip install -r requirements.txt`. Faker is the only third-party dep — the rest is stdlib. |
@@ -454,10 +424,9 @@ The count should stay at `1` no matter how many times you resend.
 | HAPI Patient lands with all fields empty (no name, no DOB, etc.) | Channel deployed without the source transformer — the destination's `${PATIENT_MRN}` etc. expanded to empty strings. | Edit the channel, add the JavaScript transformer (Step 6c), save, redeploy. Confirm via Message Browser → Mappings tab — populated `channelMap` is the success signal. |
 | Can't find "Edit Transformer" anywhere | Mirth's left **Channel Tasks** sidebar is context-sensitive — Edit Transformer only appears when the **Source** tab is selected. Switching to Summary, Destinations, or Scripts hides it. | Click the Source tab first, then look in the left sidebar. |
 | Destination errors `java.net.URISyntaxException: Illegal character in query at index N` | Raw `\|`, `:`, or `/` in the URL's query string. Java's `URI` parser is strict per RFC 3986; FHIR's `system\|value` identifier search syntax tripwires it. | URL-encode the literal characters: `:` → `%3A`, `/` → `%2F`, `\|` → `%7C`. Only encode the query value, not the `?identifier=` key itself or the `${PATIENT_MRN}` placeholder. |
-| OpenWebStart silently doesn't launch | macOS Gatekeeper. | System Settings → Privacy & Security → look for a pending "OpenWebStart was blocked" entry → click **Open Anyway**. |
+| Double-clicking `mirth-administrator.jnlp` → *"Unable to locate a Java Runtime that supports javaws."* | `javaws` was removed from Java 11+, so a modern JDK has no Web Start; macOS falls back to its dead `/usr/bin/javaws` stub, which only prints this error. | Install the native launcher (Step 3) and open the `.jnlp` with it (right-click → **Open With → Mirth Connect Administrator Launcher** → **Change All**). The launcher supplies the Web Start runtime. OpenWebStart is **not** a workaround — it launches the client but then fails to connect to the server. |
 | Mirth **server** in container is slow (channel ops, deploys take 15+ seconds) | Container JVM heap default is `-Xmx256m` which thrashes GC under the Swing client's REST chatter. The container has plenty of memory; the JVM just refuses to use it. | The compose file already sets `-e VMOPTIONS="-Xmx2g,-Xms512m"`. Verify with `docker exec mirth grep -E "^-Xm" /opt/connect/mcserver.vmoptions` — last `-Xmx` line should be `-Xmx2g` (HotSpot uses the last flag). |
 | Mirth **admin client** is slow (UI lag, "stuck" feel on message clicks, sluggish scrolling) | Two separate causes, often confused. (a) Client JVM heap defaulted to 1 GB in the launcher's per-server config; (b) — and much more common in practice — *host* memory pressure forces macOS to swap the client JVM's working set to disk, making everything feel stuck. The containers themselves are usually idle when this happens. | (a) Launcher → Edit Server → **Max Heap Size** = `2g`. (b) Check swap with `sysctl vm.swapusage`; if `used` is several GB, close memory-hungry apps (browsers, Slack, idle terminals) and re-test. See "Performance and host resources" section below. |
-| Message Browser content tabs (Raw / Processed Raw / Transformed / Encoded / Sent / Response) are blank when clicking a message | You're on the OpenWebStart launch path with a JavaFX-less JDK (Adoptium, Temurin default). Mirth uses JavaFX WebView for those panes; with no JavaFX natives, they silently fail to render. | Switch to the native Mirth Connect Administrator Launcher (Step 3), which bundles JavaFX. Or install Liberica Full / Zulu+FX and point OpenWebStart at it via JVM Manager. |
 | Containers don't auto-start after Docker Desktop restarts (VM resize, OS reboot, etc.) | Default `docker run` restart policy is `no`. Bare-command setups stay stopped. | The compose file uses `restart: unless-stopped`, which fixes this. If you started with `docker run`, recreate via `docker compose up -d`. |
 | Mirth channel disappears when you `docker rm` the container | Channels live in in-container Derby; no volume = no persistence. | Use the REST API to export channels to XML before recreating, then re-import. See "Preserving channels across recreates" below. The compose file mounts named volumes for `appdata`/`custom-extensions`, so `docker compose down` (without `-v`) preserves deployed channels; `docker compose down -v` wipes them. |
 
